@@ -56,8 +56,8 @@ def execute_render_task(task: RenderTask) -> list[str]:
             suffix=".json",
             delete=False,
         ) as staged_json:
-            staged_json.write(task.json_str)
             staged_json_path = Path(staged_json.name)
+            staged_json.write(task.json_str)
 
         sys_inputs = {
             "json_path": staged_json_path.name,
