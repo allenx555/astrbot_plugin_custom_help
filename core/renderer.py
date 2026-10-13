@@ -28,11 +28,14 @@ class TypstRenderer:
         template_path: Path,
         font_dirs: list[Path],
         config: TypstPluginConfig,
+        *,
+        ignore_system_fonts: bool = False,
     ):
         self.data_dir = data_dir
         self.template_path = template_path
         self.font_dirs = font_dirs
         self.cfg = config
+        self.ignore_system_fonts = ignore_system_fonts
         self._slots = asyncio.Semaphore(config.rendering.max_concurrent_tasks)
         self._processes = set()
         self._jobs = set()
@@ -141,6 +144,7 @@ class TypstRenderer:
                     webp_limit=self.cfg.rendering.webp_limit,
                     split_height=self.cfg.rendering.split_height,
                     ppi=self.cfg.rendering.ppi,
+                    ignore_system_fonts=self.ignore_system_fonts,
                 )
                 images = await self._compile(task)
                 if images and images[0].startswith("ERROR:"):

@@ -68,7 +68,11 @@ def build_bot(directory):
     bot.font_manager.scan_fonts()
     bot.layout = TypstLayout(bot.plugin_config)
     bot.renderer = TypstRenderer(
-        directory, bot.template_path, bot.font_dirs, bot.plugin_config
+        directory,
+        bot.template_path,
+        bot.font_dirs,
+        bot.plugin_config,
+        ignore_system_fonts=True,
     )
     return bot
 
@@ -100,6 +104,9 @@ def test_real_fixture_build_publishes_both_images_and_routes_help(
             assert public_meta["prefixes"] == ["/"]
             assert set(public_images).isdisjoint(admin_images)
             assert len(public_images) == len(admin_images) == 1
+            # Preserve both audiences even if the first comparison fails.
+            (tmp_path / "public.webp").write_bytes(public_images[0].read_bytes())
+            (tmp_path / "admin.webp").write_bytes(admin_images[0].read_bytes())
             check_image_baseline(public_images[0], "public", tmp_path)
             check_image_baseline(admin_images[0], "admin", tmp_path)
             # Both lists must decode fully, rather than merely existing on disk.
@@ -159,6 +166,7 @@ def test_real_fixture_rendered_content_color_and_column_positions(tmp_path, admi
         str(template),
         format="pdf",
         font_paths=[str(ROOT / "resources/fonts")],
+        ignore_system_fonts=True,
         sys_inputs={"json_path": payload.name, "timestamp": "fixture-test"},
     )
     colors, positions, stack = {}, {}, []

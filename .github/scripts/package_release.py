@@ -71,11 +71,8 @@ def package(source: Path, tag: str, output: Path, notes_dir: Path):
         if archive.testzip() is not None:
             raise ValueError("Installation ZIP validation failed")
     notes = notes_dir / f"{tag}.md"
-    title = f"{tag} — {metadata.get('display_name', name)}".replace("\n", " ").replace(
-        "\r", " "
-    )
     return {
-        "title": title,
+        "title": tag,
         "asset": asset.resolve().as_posix(),
         "notes": notes.resolve().as_posix() if notes.is_file() else "",
     }

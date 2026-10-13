@@ -402,10 +402,17 @@ class HelpTypst(Star):
             self.prefixes = ["/"]
 
     @filter.command("helps")
-    async def show_menu(self, event: AstrMessageEvent, query: str = ""):
-        """按管理员身份发送固定菜单及搜索结果。"""
+    async def show_menu(
+        self, event: AstrMessageEvent, query: str = "", keyword: str = ""
+    ):
+        """发送固定菜单及搜索结果；--public 可预览普通用户版。"""
         try:
-            admin = event.is_admin()
+            query = " ".join(part.strip() for part in (query, keyword) if part.strip())
+            option, _, remaining = query.partition(" ")
+            public_view = option == "--public"
+            if public_view:
+                query = remaining
+            admin = event.is_admin() and not public_view
             payload, images, document = await asyncio.to_thread(
                 self.menu_store.read_published, admin=admin
             )

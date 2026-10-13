@@ -629,3 +629,57 @@ def test_legacy_publication_admin_falls_back_without_hidden_search(tmp_path):
         assert results[-1] == "已发布菜单中没有匹配的可见功能。"
 
     asyncio.run(run())
+
+
+@pytest.mark.parametrize("is_admin", [False, True])
+def test_public_preview_uses_public_images_and_search_even_if_admin_image_broken(
+    tmp_path, is_admin
+):
+    store, public_image = published(tmp_path)
+    admin_image = public_image.parent / "admin.webp"
+    Image.new("RGB", (30, 30)).save(admin_image)
+    store.publish(
+        public_image.parent, [str(public_image)], document(), ["/"], [str(admin_image)]
+    )
+    admin_image.write_bytes(b"broken")
+    bot = object.__new__(HelpTypst)
+    bot.menu_store = store
+    event = FakeEvent()
+    event.is_admin = lambda: is_admin
+
+    async def run():
+        results = [r async for r in bot.show_menu(event, "--public")]
+        assert len(results) == 1
+        assert results[0][0].path == str(public_image.resolve())
+        assert [r async for r in bot.show_menu(event, "--public", "secret")] == [
+            "已发布菜单中没有匹配的可见功能。"
+        ]
+        visible = [r async for r in bot.show_menu(event, "--public", "搜图")]
+        assert "搜图" in visible[0] and "（隐藏）" not in visible[0]
+        # Public preview must not depend on the presence of an admin variant.
+        store.publish(public_image.parent, [str(public_image)], document(), ["/"])
+        legacy = [r async for r in bot.show_menu(event, "--public")]
+        assert len(legacy) == 1 and legacy[0][0].path == str(public_image.resolve())
+
+    asyncio.run(run())
+
+
+@pytest.mark.parametrize(
+    ("arguments", "expected"),
+    [
+        ([], {"query": "", "keyword": ""}),
+        (["--public"], {"query": "--public", "keyword": ""}),
+        (["--public", "搜图"], {"query": "--public", "keyword": "搜图"}),
+        (["secret"], {"query": "secret", "keyword": ""}),
+    ],
+)
+def test_helps_public_option_parses_through_astrbot_command_filter(arguments, expected):
+    from astrbot.core.star.filter.command import CommandFilter
+
+    command = CommandFilter(
+        "helps", handler_md=SimpleNamespace(handler=HelpTypst.show_menu)
+    )
+    assert (
+        command.validate_and_convert_params(arguments, command.handler_params)
+        == expected
+    )

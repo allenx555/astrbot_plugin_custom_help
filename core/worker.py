@@ -33,6 +33,7 @@ class RenderTask:
     webp_limit: int = DefaultCFG.LIMIT_WEBP
     split_height: int = DefaultCFG.LIMIT_SIDE
     ppi: float = DefaultCFG.LIMIT_PPI
+    ignore_system_fonts: bool = False
 
 
 def execute_render_task(task: RenderTask) -> list[str]:
@@ -71,6 +72,7 @@ def execute_render_task(task: RenderTask) -> list[str]:
             str(template_dir / Path(task.template_path).name),
             output=task.output_png_path,
             font_paths=task.font_paths,
+            ignore_system_fonts=task.ignore_system_fonts,
             format="png",
             ppi=task.ppi,
             sys_inputs=sys_inputs,

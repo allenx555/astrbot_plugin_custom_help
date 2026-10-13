@@ -48,12 +48,29 @@ jobs:
           python-version: '3.11'
 
       - name: Install test and package dependencies
+        shell: bash
         run: |
-          python -m pip install 'astrbot==4.14.6' pytest Pillow pypdf 'PyYAML>=6,<7' -r astrbot_plugin_custom_help/requirements.txt
+          constraints=()
+          if [[ -f astrbot_plugin_custom_help/tests/render-constraints.txt ]]; then
+            constraints=(-c astrbot_plugin_custom_help/tests/render-constraints.txt)
+          fi
+          python -m pip install "${constraints[@]}" 'astrbot==4.14.6' pytest Pillow pypdf 'PyYAML>=6,<7' -r astrbot_plugin_custom_help/requirements.txt
 
       - name: Test tagged plugin
         working-directory: astrbot_plugin_custom_help
-        run: python -m pytest tests -q
+        run: python -m pytest tests -q --basetemp="$RUNNER_TEMP/custom-help-test-results"
+
+      - name: Save rendered menu images and visual differences
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: menu-render-results-${{ env.RELEASE_TAG }}
+          path: |
+            ${{ runner.temp }}/custom-help-test-results/**/public.webp
+            ${{ runner.temp }}/custom-help-test-results/**/admin.webp
+            ${{ runner.temp }}/custom-help-test-results/**/*-diff.png
+          if-no-files-found: ignore
+          retention-days: 14
 
       - name: Package and validate version
         id: package
@@ -74,9 +91,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # Reruns refresh the generated installation ZIP, preserving any
-          # existing release text and publication settings.
+          # Reruns normalize the title to the version tag and refresh the ZIP,
+          # preserving existing release notes and publication settings.
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release edit "$RELEASE_TAG" --title "$RELEASE_TITLE"
             gh release upload "$RELEASE_TAG" "$RELEASE_ASSET" --clobber
           else
             args=(--verify-tag --title "$RELEASE_TITLE")

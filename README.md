@@ -37,6 +37,8 @@
 3. 执行 `/typst build`，同时生成普通版和管理员完整版。
 4. `/helps` 自动按 AstrBot 管理员身份发送对应版本；`/helps 关键词` 搜索已发布内容。
 
+管理员执行 `/helps --public` 可预览普通用户看到的图片；`/helps --public 关键词` 只搜索普通用户可见的内容。该参数放在关键词前，仅影响本次请求，不修改身份、配置或已发布菜单。
+
 `/` 以 AstrBot 实际配置的唤醒前缀为准。导出命令会返回文件路径，通常为 `data/plugin_data/astrbot_plugin_custom_help/menu.json`。
 
 管理员完整版以浅灰色显示隐藏命令，隐藏分类及指令组的子命令也会标灰。普通用户只查看和搜索公开内容；`available: false` 的停用或失效项两版都不显示。`/help` 保留 AstrBot 内置功能。
@@ -72,6 +74,7 @@ Docker/NAS 用户应确保数据目录和自定义字体目录已挂载到容器
 | `/typst status` | 查看源文件和当前发布状态 | 管理员 |
 | `/typst font` | 扫描字体并重载本插件 | 管理员 |
 | `/helps [关键词]` | 固定图片或已发布菜单文本搜索 | 所有用户 |
+| `/helps --public [关键词]` | 查看或搜索普通版，供管理员预览 | 所有用户 |
 | `/events [关键词]` | 实时事件监听及工具诊断 | 管理员 |
 | `/filters [关键词]` | 实时过滤器诊断 | 管理员 |
 
@@ -143,7 +146,7 @@ python -m pytest tests/test_menu_fixture_build.py -q
 
 提交前更新 `metadata.yaml` 的版本，并推送对应 `v*` tag。GitHub Actions 会测试 tag 中的代码、校验版本、打包运行文件并发布 Release。
 
-说明优先读取 `.github/release-notes/<tag>.md`；没有文件时生成 GitHub 发布说明。含连字符的版本标记为预发布。重复运行保留已有文案并更新安装包。
+Release 标题只使用版本号，例如 `v0.3.0`。说明优先读取 `.github/release-notes/<tag>.md`；没有文件时生成 GitHub 发布说明。含连字符的版本标记为预发布。重复运行会将标题统一为版本号，保留已有发布说明并更新安装包。
 
 旧 tag 可在 Actions → Publish Release → Run workflow 中手动发布。无需本机安装 `gh` 或配置额外密钥。测试、工作流和本地运行数据不包含在安装包中。
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
 from astrbot_plugin_custom_help.core import worker
 
 
@@ -20,13 +21,17 @@ def _render_task(template: Path, output_dir: Path, payload: str) -> worker.Rende
     )
 
 
-def test_render_stages_json_as_a_file_and_cleans_it(monkeypatch, tmp_path):
+@pytest.mark.parametrize("ignore_system_fonts", [False, True])
+def test_render_stages_json_as_a_file_and_cleans_it(
+    monkeypatch, tmp_path, ignore_system_fonts
+):
     template = tmp_path / "base.typ"
     template.write_text("#let data = json(sys.inputs.json_path)", encoding="utf-8")
     payload = json.dumps({"plugins": ["x" * 10_000]})
     observed = {}
 
     def fake_compile(template_path, **kwargs):
+        observed["ignore_system_fonts"] = kwargs["ignore_system_fonts"]
         observed["inputs"] = kwargs["sys_inputs"]
         staged = Path(template_path).parent / kwargs["sys_inputs"]["json_path"]
         observed["path"] = staged
@@ -35,9 +40,12 @@ def test_render_stages_json_as_a_file_and_cleans_it(monkeypatch, tmp_path):
     monkeypatch.setattr(worker.typst, "compile", fake_compile)
     monkeypatch.setattr(worker, "process_image_to_webp", lambda **_kwargs: ["ok.webp"])
 
-    result = worker.execute_render_task(_render_task(template, tmp_path, payload))
+    task = _render_task(template, tmp_path, payload)
+    task.ignore_system_fonts = ignore_system_fonts
+    result = worker.execute_render_task(task)
 
     assert result == ["ok.webp"]
+    assert observed["ignore_system_fonts"] is ignore_system_fonts
     assert "json_string" not in observed["inputs"]
     assert not observed["path"].exists()
     assert observed["path"].parent != template.parent

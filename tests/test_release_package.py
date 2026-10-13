@@ -45,6 +45,7 @@ def test_release_zip_contains_runtime_files_only_and_is_reproducible(tmp_path):
     asset = Path(result["asset"])
     first = asset.read_bytes()
     assert asset.name == "astrbot_plugin_custom_help-v0.2.1.zip"
+    assert result["title"] == "v0.2.1"
     assert result["notes"] == (notes / "v0.2.1.md").resolve().as_posix()
     with ZipFile(asset) as archive:
         assert set(archive.namelist()) == {
@@ -56,6 +57,17 @@ def test_release_zip_contains_runtime_files_only_and_is_reproducible(tmp_path):
         }
     release.package(source, "v0.2.1", tmp_path / "dist", notes)
     assert asset.read_bytes() == first
+
+
+@pytest.mark.parametrize("tag", ["v0.3.0", "v0.3.0-beta.1"])
+def test_release_title_is_only_the_version_tag(tmp_path, tag):
+    source = source_repo(tmp_path)
+    metadata = source / "metadata.yaml"
+    metadata.write_text(
+        metadata.read_text(encoding="utf-8").replace("v0.2.1", tag), encoding="utf-8"
+    )
+    result = release.package(source, tag, tmp_path / "dist", tmp_path / "notes")
+    assert result["title"] == tag
 
 
 @pytest.mark.parametrize("tag", ["v0.2.2", "../../v0.2.1", "not-a-version"])
