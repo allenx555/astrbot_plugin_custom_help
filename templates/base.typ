@@ -576,34 +576,40 @@
     let gap = 15pt
     let card_width = (size.width - 2 * gap) / 3
     let limit = data.at("column_height_pt", default: 600) * 1pt
-    let bands = ()
     let cols = ((), (), ())
+    let heights = (0pt, 0pt, 0pt)
     let col = 0
-    let used = 0pt
     for plugin in data.at("ordered_cards", default: ()) {
       let card = plugin_card(plugin, mode: "standard")
       let height = measure(card, width: card_width).height
-      let spacing = if cols.at(col).len() > 0 { gap } else { 0pt }
-      if cols.at(col).len() > 0 and used + spacing + height > limit {
-        col += 1
-        used = 0pt
-        spacing = 0pt
-        if col == 3 {
-          bands.push(cols)
-          cols = ((), (), ())
-          col = 0
+      let target = none
+      for offset in range(3) {
+        let candidate = calc.rem(col + offset, 3)
+        let spacing = if cols.at(candidate).len() > 0 { gap } else { 0pt }
+        if target == none and (cols.at(candidate).len() == 0 or heights.at(candidate) + spacing + height <= limit) {
+          target = candidate
         }
       }
-      cols.at(col).push(card)
-      used += spacing + height
+      // If all columns are full, continue below the shortest one without
+      // starting a new band underneath the tallest card.
+      if target == none {
+        target = col
+        for offset in range(1, 3) {
+          let candidate = calc.rem(col + offset, 3)
+          if heights.at(candidate) < heights.at(target) { target = candidate }
+        }
+      }
+      let spacing = if cols.at(target).len() > 0 { gap } else { 0pt }
+      cols.at(target).push(card)
+      heights.at(target) += spacing + height
+      col = calc.rem(target + 1, 3)
     }
-    if cols.any(column => column.len() > 0) { bands.push(cols) }
-    stack(spacing: gap, ..bands.map(columns => grid(
+    grid(
       columns: (1fr, 1fr, 1fr), gutter: gap,
-      ..columns.map(cards => align(top)[
+      ..cols.map(cards => align(top)[
         #stack(spacing: gap, ..cards)
       ])
-    )))
+    )
   })
 } else {
 grid(

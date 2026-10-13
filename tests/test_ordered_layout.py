@@ -82,9 +82,7 @@ def test_rendered_command_order_is_json_order(tmp_path):
     reader = PdfReader(io.BytesIO(pdf))
     text = reader.pages[0].extract_text(visitor_text=visit).replace("\u200b", "")
     names = ["CardZ", "CardA", "CardM", "CardB"]
-    assert [text.index(name) for name in names] == sorted(
-        text.index(name) for name in names
-    )
+    assert all(name in text for name in names)
     assert positions["CardZ"][0] < positions["CardA"][0] < positions["CardM"][0]
     assert abs(positions["CardZ"][1] - positions["CardA"][1]) < 1
     assert positions["CardB"][1] < positions["CardZ"][1]
@@ -179,16 +177,18 @@ def test_whole_cards_fill_columns_without_splitting(tmp_path):
         .extract_text(visitor_text=visit)
         .replace("\u200b", "")
     )
-    assert [text.index(name) for name in names] == sorted(
-        text.index(name) for name in names
-    )
-    assert abs(positions["SmallA"][0] - positions["SmallB"][0]) < 1
-    assert positions["SmallB"][1] < positions["SmallA"][1]
-    assert positions["SmallA"][0] < positions["TallC"][0] < positions["SmallD"][0]
-    assert abs(positions["SmallD"][0] - positions["SmallE"][0]) < 1
-    assert positions["SmallE"][1] < positions["SmallD"][1]
+    assert all(name in text for name in names)
+    assert positions["SmallA"][0] < positions["SmallB"][0] < positions["TallC"][0]
+    assert abs(positions["SmallA"][1] - positions["SmallB"][1]) < 1
+    assert abs(positions["SmallA"][1] - positions["TallC"][1]) < 1
+    assert abs(positions["SmallD"][0] - positions["SmallA"][0]) < 1
+    assert abs(positions["SmallE"][0] - positions["SmallB"][0]) < 1
+    assert positions["SmallD"][1] < positions["SmallA"][1]
+    assert positions["SmallE"][1] < positions["SmallB"][1]
+    assert positions["SmallD"][1] > positions["TallCItem17"][1]
+    assert positions["SmallE"][1] > positions["TallCItem17"][1]
     assert abs(positions["TallF"][0] - positions["SmallA"][0]) < 1
-    assert positions["TallF"][1] < positions["SmallB"][1]
+    assert positions["TallF"][1] < positions["SmallD"][1]
     for name in ["TallC", "TallF"]:
         for i in range(18):
             x, _ = positions[f"{name}Item{i:02d}"]

@@ -85,11 +85,11 @@
         "hint": "超过此高度的插件将独占一行显示 (仅 Event/Filter 模式有效)"
       },
       "column_height_pt": {
-        "description": "命令菜单列高度上限 (pt)",
+        "description": "命令菜单长列跳过阈值 (pt)",
         "type": "float",
         "default": 600.0,
         "slider": {"min": 100, "max": 3000, "step": 50},
-        "hint": "按 JSON 顺序从上到下填列；放不下下一张卡片时整卡移到右列。单卡超过上限时保持完整并独占一列。修改后重载插件并执行 /typst build。"
+        "hint": "按 JSON 顺序轮流向左、中、右列追加完整卡片，跳过放不下的列；全部达到阈值时继续放到最短列。修改后重载插件并执行 /typst build。"
       },
 	  "split_height": {
         "description": "长图切分高度 (px)",
