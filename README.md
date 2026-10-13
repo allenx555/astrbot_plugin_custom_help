@@ -12,6 +12,14 @@
 
 详见 [手动菜单说明](MANUAL_MENU.md)，以及 [菜单 JSON 示例](menu.example.json)。下方预览及历史介绍来自原插件；图片搜索已改为文本搜索，事件和过滤器调试命令仅限管理员。
 
+## 自动发布 Release
+
+推送 `v*` tag 后，GitHub Actions 自动测试 tag 中的代码，校验 tag 与 `metadata.yaml` 的版本一致，并创建 Release、上传 `astrbot_plugin_custom_help-v版本号.zip` 安装包。
+
+说明优先读取 `.github/release-notes/<tag>.md`；没有对应文件时使用 GitHub 自动生成的说明。预发布 tag（例如 `v0.3.0-beta.1`）会标记为 Pre-release。重复运行保留已有 Release 文案，并更新安装包。
+
+也可在 Actions → Publish Release → Run workflow 中输入已有 tag 手动发布，适用于 workflow 添加前创建的 tag。安装包始终来自指定 tag；本地数据、测试文件和工作流不打入安装包。无需本机安装 `gh`，无需额外配置发布密钥。
+
 <div align="center">
 
 [![AstrBot](https://img.shields.io/badge/AstrBot-Plugin-purple?style=flat-square)](https://github.com/Soulter/AstrBot)

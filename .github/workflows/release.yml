@@ -1,0 +1,90 @@
+name: Publish Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing version tag, for example v0.2.1'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      # Keep release tooling on the default branch, so manual runs also work
+      # for older tags that did not contain this workflow or packaging script.
+      - name: Checkout release tooling
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - name: Checkout tagged plugin
+        uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ env.RELEASE_TAG }}
+          path: astrbot_plugin_custom_help
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install test and package dependencies
+        run: |
+          python -m pip install 'astrbot==4.14.6' pytest Pillow pypdf 'PyYAML>=6,<7' -r astrbot_plugin_custom_help/requirements.txt
+
+      - name: Test tagged plugin
+        run: python -m pytest astrbot_plugin_custom_help/tests -q
+
+      - name: Package and validate version
+        id: package
+        run: |
+          python .github/scripts/package_release.py \
+            --source astrbot_plugin_custom_help \
+            --tag "$RELEASE_TAG" \
+            --output dist \
+            --notes-dir .github/release-notes
+
+      - name: Publish release and installation ZIP
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TITLE: ${{ steps.package.outputs.title }}
+          RELEASE_ASSET: ${{ steps.package.outputs.asset }}
+          RELEASE_NOTES: ${{ steps.package.outputs.notes }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Reruns refresh the generated installation ZIP, preserving any
+          # existing release text and publication settings.
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "$RELEASE_ASSET" --clobber
+          else
+            args=(--verify-tag --title "$RELEASE_TITLE")
+            if [[ -n "$RELEASE_NOTES" ]]; then
+              args+=(--notes-file "$RELEASE_NOTES")
+            else
+              args+=(--generate-notes)
+            fi
+            if [[ "$RELEASE_TAG" == *-* ]]; then
+              args+=(--prerelease)
+            fi
+            gh release create "$RELEASE_TAG" "$RELEASE_ASSET" "${args[@]}"
+          fi
