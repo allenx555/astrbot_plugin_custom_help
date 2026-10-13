@@ -208,6 +208,8 @@
 
 // --- 单行模式 ---
 #let render_single_row(node) = {
+  let c_leaf_text = if node.at("hidden", default: false) { rgb("#a6aeb5") } else { c_leaf_text }
+  let c_desc_text = if node.at("hidden", default: false) { rgb("#a6aeb5") } else { c_desc_text }
   if node.tag == "regex_pattern" {
     grid(
       columns: (auto, 1fr), gutter: 6pt,
@@ -353,6 +355,9 @@
 
 // --- 标准递归 ---
 #let render_node_standard(node, indent_level: 0) = {
+  let c_group_title = if node.at("hidden", default: false) { rgb("#a6aeb5") } else { c_group_title }
+  let c_plugin_id = if node.at("hidden", default: false) { rgb("#a6aeb5") } else { c_plugin_id }
+  let c_desc_text = if node.at("hidden", default: false) { rgb("#a6aeb5") } else { c_desc_text }
   if node.is_group {
     let content = [
         #grid(
@@ -410,6 +415,8 @@
 
 // --- 插件卡片头部 ---
 #let plugin_header(plugin) = {
+  let c_plugin_name = if plugin.at("hidden", default: false) { rgb("#a6aeb5") } else { c_plugin_name }
+  let c_plugin_id = if plugin.at("hidden", default: false) { rgb("#a6aeb5") } else { c_plugin_id }
   let display = plugin.display_name
   let name = plugin.name
   let ver = plugin.version
@@ -565,6 +572,10 @@
 }
 
 // --- 巨型块 --- 
+#if data.at("admin_view", default: false) {
+  align(center)[#text(size: 10pt, fill: rgb("#89939c"))[浅色文字：普通菜单中隐藏的功能（含隐藏分类及指令组的子命令）]]
+  v(10pt)
+}
 #if data.giants.len() > 0 {
   stack(spacing: 10pt, ..data.giants.map(plugin => plugin_card(plugin, mode: "giant")))
   v(15pt)

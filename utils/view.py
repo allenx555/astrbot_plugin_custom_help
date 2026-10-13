@@ -29,9 +29,7 @@ class HelpHint:
 class MsgRecall:
     """负责发送提示消息, 并在完成后撤回"""
 
-    async def send_wait(
-        self, event: AstrMessageEvent, text: str
-    ) -> int | str | None:
+    async def send_wait(self, event: AstrMessageEvent, text: str) -> int | str | None:
         """发送提示并返回消息ID"""
         bot = getattr(event, "bot", None)
         payload = event.plain_result(text)
@@ -151,6 +149,7 @@ class TypstLayout:
         mode: str,
         prefixes: list[str],
         font_list: list[str],
+        admin_view: bool = False,
     ):
         """生成布局数据并写入文件"""
         payload = self._generate_balanced_payload(
@@ -158,6 +157,7 @@ class TypstLayout:
         )
         # 注入颜色配置
         payload["colors"] = self.cfg.appearance.get_active_colors()
+        payload["admin_view"] = admin_view
 
         save_path.write_text(
             json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"

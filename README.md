@@ -12,6 +12,8 @@
 
 详见 [手动菜单说明](MANUAL_MENU.md)，以及 [菜单 JSON 示例](menu.example.json)。下方预览及历史介绍来自原插件；图片搜索已改为文本搜索，事件和过滤器调试命令仅限管理员。
 
+`/typst build` 同时生成普通版与管理员完整版；`/helps` 自动按 AstrBot 管理员身份选择图片。管理员版以浅灰色显示隐藏命令，关键词搜索也包含隐藏内容；普通用户只能查看公开内容。
+
 ## 自动发布 Release
 
 推送 `v*` tag 后，GitHub Actions 自动测试 tag 中的代码，校验 tag 与 `metadata.yaml` 的版本一致，并创建 Release、上传 `astrbot_plugin_custom_help-v版本号.zip` 安装包。

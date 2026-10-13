@@ -196,10 +196,9 @@ class HelpTypst(Star):
                     MenuDocument.read, self.menu_store.source
                 )
                 plugins = document.visible_plugins()
-                if not plugins:
-                    raise ValueError(
-                        "没有可见命令，请检查插件及节点的 visible/available"
-                    )
+                admin_plugins = document.visible_plugins(include_hidden=True)
+                if not admin_plugins:
+                    raise ValueError("没有可用命令，请检查插件及节点的 available")
                 generation = await asyncio.to_thread(self.menu_store.new_generation)
                 self._init_prefixes(self.context)
                 prefixes = list(self.prefixes)
@@ -207,31 +206,50 @@ class HelpTypst(Star):
                     self.plugin_config.appearance.get_active_font_order()
                 )
 
-                def pipeline(path):
-                    self.layout.dump_layout_json(
-                        plugins, path, document.title, "command", prefixes, fonts
-                    )
-                    return len(plugins)
+                async def render_variant(items, name, title):
+                    directory = generation / name
+                    await asyncio.to_thread(directory.mkdir)
 
-                renderer = TypstRenderer(
-                    self,
-                    generation,
-                    self.template_path,
-                    self.font_dirs,
-                    self.plugin_config,
+                    def pipeline(path):
+                        self.layout.dump_layout_json(
+                            items,
+                            path,
+                            title,
+                            "command",
+                            prefixes,
+                            fonts,
+                            admin_view=name == "admin",
+                        )
+                        # An entirely hidden menu still has a public title/legend.
+                        return max(1, len(items))
+
+                    renderer = TypstRenderer(
+                        self,
+                        directory,
+                        self.template_path,
+                        self.font_dirs,
+                        self.plugin_config,
+                    )
+                    result, error = await renderer.render(pipeline, "command")
+                    if not result:
+                        raise RuntimeError(f"{name} 菜单生成失败：{error}")
+                    return result
+
+                result = await render_variant(plugins, "public", document.title)
+                admin_result = await render_variant(
+                    admin_plugins, "admin", f"{document.title}（管理员完整版）"
                 )
-                result, error = await renderer.render(pipeline, "command")
-                if not result:
-                    raise RuntimeError(error)
                 published = await asyncio.to_thread(
                     self.menu_store.publish,
                     generation,
                     result.images,
                     document,
                     prefixes,
+                    admin_result.images,
                 )
             yield event.plain_result(
                 f"菜单已生成：{len(result.images)} 张图片，{len(plugins)} 个可见分类。\n"
+                f"管理员完整版：{len(admin_result.images)} 张图片，{len(admin_plugins)} 个分类（浅色为隐藏功能）。\n"
                 f"生成时间：{published['generated_at']}\n使用 /helps 查看。"
             )
         except FileNotFoundError:
@@ -349,14 +367,22 @@ class HelpTypst(Star):
 
     @filter.command("helps")
     async def show_menu(self, event: AstrMessageEvent, query: str = ""):
-        """发送固定菜单，关键词搜索已发布的可见内容。"""
+        """按管理员身份发送固定菜单及搜索结果。"""
         try:
+            admin = event.is_admin()
             payload, images, document = await asyncio.to_thread(
-                self.menu_store.read_published
+                self.menu_store.read_published, admin=admin
             )
+            if admin and "admin_images" not in payload:
+                yield event.plain_result(
+                    "管理员完整版尚未生成，暂用普通版；请执行 /typst build。"
+                )
             if query.strip():
                 chunks = search_published(
-                    document, query, payload.get("prefixes", ["/"])
+                    document,
+                    query,
+                    payload.get("prefixes", ["/"]),
+                    include_hidden=admin and "admin_images" in payload,
                 )
                 if not chunks:
                     yield event.plain_result("已发布菜单中没有匹配的可见功能。")

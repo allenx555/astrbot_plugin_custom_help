@@ -63,17 +63,19 @@ class MenuDocument(BaseModel):
         check(document.plugins)
         return document
 
-    def visible_plugins(self) -> list[PluginMetadata]:
-        def nodes(items):
+    def visible_plugins(self, include_hidden=False) -> list[PluginMetadata]:
+        def nodes(items, inherited_hidden=False):
             result = []
             for item in items:
-                if not item.visible or not item.available:
+                if not item.available or (not include_hidden and not item.visible):
                     continue
-                children = nodes(item.children)
+                hidden = inherited_hidden or not item.visible
+                children = nodes(item.children, hidden)
                 if item.is_group and not children:
                     continue
                 result.append(
                     RenderNode(
+                        hidden=hidden,
                         name=item.name,
                         desc=item.desc,
                         is_group=item.is_group,
@@ -86,12 +88,13 @@ class MenuDocument(BaseModel):
 
         result = []
         for plugin in self.plugins:
-            if not plugin.visible or not plugin.available:
+            if not plugin.available or (not include_hidden and not plugin.visible):
                 continue
-            visible = nodes(plugin.nodes)
+            visible = nodes(plugin.nodes, not plugin.visible)
             if visible:
                 result.append(
                     PluginMetadata(
+                        hidden=not plugin.visible,
                         name=plugin.name,
                         display_name=plugin.display_name,
                         desc=plugin.desc,
@@ -219,12 +222,22 @@ class MenuStore:
         directory.mkdir(parents=True)
         return directory
 
-    def publish(self, generation, images, document, prefixes):
+    def publish(self, generation, images, document, prefixes, admin_images=None):
         if not images or any(not verify_image_header(Path(p)) for p in images):
             raise ValueError("生成的菜单图片缺失或损坏")
         relative = [
             str(Path(p).resolve().relative_to(self.root.resolve())) for p in images
         ]
+        admin_relative = None
+        if admin_images is not None:
+            if not admin_images or any(
+                not verify_image_header(Path(p)) for p in admin_images
+            ):
+                raise ValueError("生成的管理员菜单图片缺失或损坏")
+            admin_relative = [
+                str(Path(p).resolve().relative_to(self.root.resolve()))
+                for p in admin_images
+            ]
         atomic_json(generation / "menu.json", document.model_dump())
         payload = {
             "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
@@ -232,11 +245,13 @@ class MenuStore:
             "menu": str((generation / "menu.json").relative_to(self.root)),
             "prefixes": prefixes,
         }
+        if admin_relative is not None:
+            payload["admin_images"] = admin_relative
         # Commit only after all images and the published source are ready.
         atomic_json(self.manifest, payload)
         return payload
 
-    def read_published(self):
+    def read_published(self, admin=False):
         payload = json.loads(self.manifest.read_text(encoding="utf-8"))
 
         def resolve(relative):
@@ -244,19 +259,23 @@ class MenuStore:
             path.relative_to(self.root.resolve())
             return path
 
-        images = [resolve(p) for p in payload["images"]]
+        images = (
+            [resolve(p) for p in payload.get("admin_images", payload["images"])]
+            if admin
+            else [resolve(p) for p in payload["images"]]
+        )
         if not images or any(not verify_image_header(p) for p in images):
             raise ValueError("已发布菜单图片缺失或损坏，请管理员重新生成")
         document = MenuDocument.read(resolve(payload["menu"]))
         return payload, images, document
 
 
-def search_published(document, query, prefixes):
-    """Search only the published, visible menu; never inspect live registries."""
+def search_published(document, query, prefixes, include_hidden=False):
+    """Search the published source for the selected audience."""
     q = query.casefold().strip()
     lines = []
     prefix = prefixes[0] if prefixes else "/"
-    for plugin in document.visible_plugins():
+    for plugin in document.visible_plugins(include_hidden=include_hidden):
         label = plugin.display_name or plugin.name
         plugin_match = q in " ".join([label, plugin.name, plugin.desc]).casefold()
 
@@ -271,7 +290,10 @@ def search_published(document, query, prefixes):
                 if node.is_group:
                     walk(node.children, path, match)
                 elif match:
-                    lines.append(f"{label} · {prefix}{' '.join(path)}：{node.desc}")
+                    marker = "（隐藏）" if node.hidden else ""
+                    lines.append(
+                        f"{label} · {prefix}{' '.join(path)}{marker}：{node.desc}"
+                    )
 
         walk(plugin.nodes)
     # Bound message size; do not silently truncate the result set.

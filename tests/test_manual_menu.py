@@ -166,6 +166,9 @@ def test_export_backup_and_editing_source_does_not_change_published_search(tmp_p
 
 
 class FakeEvent:
+    def is_admin(self):
+        return False
+
     def plain_result(self, text):
         return text
 
@@ -344,7 +347,8 @@ def test_inventory_includes_disabled_regex_handlers_and_tools(monkeypatch):
     assert not items[0]["enabled"] and not items[1]["enabled"]
 
 
-def test_build_command_with_real_typst_and_worker_process(tmp_path):
+@pytest.mark.parametrize("hide_all", [False, True])
+def test_build_command_with_real_typst_and_worker_process(tmp_path, hide_all):
     from pathlib import Path
 
     from astrbot_plugin_custom_help.domain import TypstPluginConfig
@@ -373,7 +377,9 @@ def test_build_command_with_real_typst_and_worker_process(tmp_path):
         kv.pop(key, None)
 
     bot.get_kv_data, bot.put_kv_data, bot.delete_kv_data = get_kv, put_kv, delete_kv
-    bot.menu_store.save_source(document())
+    source = document()
+    source.plugins[0].visible = not hide_all
+    bot.menu_store.save_source(source)
 
     async def run():
         messages = [r async for r in bot.build_menu(FakeEvent())]
@@ -382,6 +388,18 @@ def test_build_command_with_real_typst_and_worker_process(tmp_path):
         assert payload["prefixes"] == ["/"]
         assert images and committed.title == document().title
         assert all(Image.open(p).width > 100 for p in images)
+        _, admin_images, _ = bot.menu_store.read_published(admin=True)
+        assert admin_images and set(admin_images).isdisjoint(images)
+        assert all(Image.open(p).width > 100 for p in admin_images)
+        import json
+
+        admin_layout = json.loads(
+            (admin_images[0].parent / "cache_menu_command.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        assert admin_layout["admin_view"]
+        assert admin_layout["ordered_cards"][0]["nodes"][1]["hidden"]
         assert list((root / "templates").glob(".help_typst_*.json")) == []
         # Changing the editable source only takes effect on the next successful build.
         bot.menu_store.source.write_text("broken JSON", encoding="utf-8")
@@ -389,5 +407,131 @@ def test_build_command_with_real_typst_and_worker_process(tmp_path):
         messages = [r async for r in bot.build_menu(FakeEvent())]
         assert "生成失败" in messages[0]
         assert bot.menu_store.manifest.read_bytes() == manifest
+
+    asyncio.run(run())
+
+
+def test_admin_render_failure_keeps_both_old_variants(tmp_path, monkeypatch):
+    store, image = published(tmp_path)
+    store.save_source(document())
+    store.publish(image.parent, [str(image)], document(), ["/"], [str(image)])
+    before = store.manifest.read_bytes()
+    bot = object.__new__(HelpTypst)
+    bot.menu_store = store
+    bot._menu_lock = asyncio.Lock()
+    bot.context = SimpleNamespace(get_config=lambda: {"wake_prefix": ["/"]})
+    from astrbot_plugin_custom_help.core.renderer import RenderResult, TypstRenderer
+    from astrbot_plugin_custom_help.domain import TypstPluginConfig
+    from astrbot_plugin_custom_help.utils import TypstLayout
+
+    bot.plugin_config = TypstPluginConfig.load({})
+    bot.template_path = tmp_path / "template.typ"
+    bot.font_dirs = []
+    bot.font_manager = SimpleNamespace(get_render_font_list=lambda _: [])
+    bot.layout = TypstLayout(bot.plugin_config)
+
+    async def fail_admin(renderer, pipeline, mode):
+        if renderer.data_dir.name == "admin":
+            return None, "test admin compile failure"
+        image = renderer.data_dir / "public.webp"
+        Image.new("RGB", (30, 30)).save(image)
+        return RenderResult([str(image)], []), ""
+
+    monkeypatch.setattr(TypstRenderer, "render", fail_admin)
+
+    async def run():
+        results = [r async for r in bot.build_menu(FakeEvent())]
+        assert "test admin compile failure" in results[0]
+        assert store.manifest.read_bytes() == before
+        assert store.read_published()[1] == [image.resolve()]
+        assert store.read_published(admin=True)[1] == [image.resolve()]
+
+    asyncio.run(run())
+
+
+def test_admin_projection_marks_hidden_ancestors_and_excludes_unavailable():
+    doc = document()
+    doc.plugins.append(
+        MenuPlugin(
+            id="hidden-plugin",
+            name="HiddenPlugin",
+            visible=False,
+            nodes=[MenuNode(id="inherited", name="Inherited")],
+        )
+    )
+    doc.plugins[0].nodes.append(
+        MenuNode(id="inactive", name="Inactive", available=False)
+    )
+    public = doc.visible_plugins()
+    full = doc.visible_plugins(include_hidden=True)
+    assert len(public) == 1 and len(public[0].nodes) == 1
+    assert [node.hidden for node in full[0].nodes] == [False, True, True]
+    assert full[0].nodes[2].children[0].hidden
+    assert full[1].hidden and full[1].nodes[0].hidden
+    assert "隐藏" in search_published(doc, "secret", ["/"], include_hidden=True)[0]
+    assert not search_published(doc, "secret", ["/"])
+    assert not search_published(doc, "Inactive", ["/"], include_hidden=True)
+
+
+def test_dual_publication_routes_by_admin_and_preserves_old_on_failure(tmp_path):
+    store, public_image = published(tmp_path)
+    generation = public_image.parent
+    admin_image = generation / "admin.webp"
+    Image.new("RGB", (30, 30)).save(admin_image)
+    store.publish(
+        generation, [str(public_image)], document(), ["/"], [str(admin_image)]
+    )
+    before = store.manifest.read_bytes()
+    with pytest.raises(ValueError, match="管理员"):
+        store.publish(
+            store.new_generation(),
+            [str(public_image)],
+            document(),
+            ["/"],
+            [str(tmp_path / "missing.webp")],
+        )
+    assert store.manifest.read_bytes() == before
+    bot = object.__new__(HelpTypst)
+    bot.menu_store = store
+
+    class AdminEvent(FakeEvent):
+        def is_admin(self):
+            return True
+
+    async def run():
+        normal = [r async for r in bot.show_menu(FakeEvent())]
+        admin = [r async for r in bot.show_menu(AdminEvent())]
+        assert public_image.name in str(normal[0][0])
+        assert admin_image.name in str(admin[0][0])
+        assert public_image.name not in str(admin[0][0])
+        assert [r async for r in bot.show_menu(FakeEvent(), "secret")] == [
+            "已发布菜单中没有匹配的可见功能。"
+        ]
+        assert "（隐藏）" in [r async for r in bot.show_menu(AdminEvent(), "secret")][0]
+        # A broken administrator image must never affect public requests.
+        admin_image.write_bytes(b"broken")
+        assert public_image.name in str(
+            [r async for r in bot.show_menu(FakeEvent())][0][0]
+        )
+        assert "尚未生成" in [r async for r in bot.show_menu(AdminEvent())][0]
+
+    asyncio.run(run())
+
+
+def test_legacy_publication_admin_falls_back_without_hidden_search(tmp_path):
+    store, image = published(tmp_path)
+    bot = object.__new__(HelpTypst)
+    bot.menu_store = store
+
+    class AdminEvent(FakeEvent):
+        def is_admin(self):
+            return True
+
+    async def run():
+        results = [r async for r in bot.show_menu(AdminEvent())]
+        assert "完整版尚未生成" in results[0]
+        assert image.name in str(results[1][0])
+        results = [r async for r in bot.show_menu(AdminEvent(), "secret")]
+        assert results[-1] == "已发布菜单中没有匹配的可见功能。"
 
     asyncio.run(run())

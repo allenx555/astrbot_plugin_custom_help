@@ -43,6 +43,7 @@ class RenderNode(BaseModel):
     priority: int | None = Field(default=None, description="事件监听优先级")
     aliases: list[str] = Field(default_factory=list)
     enabled: bool = True
+    hidden: bool = False
 
     # 递归定义
     children: list["RenderNode"] = Field(default_factory=list, description="子节点")
@@ -64,3 +65,4 @@ class PluginMetadata(BaseModel):
     nodes: list[RenderNode] = Field(default_factory=list)
     activated: bool = True
     reserved: bool = False
+    hidden: bool = False
