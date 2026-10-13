@@ -32,6 +32,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.repository.default_branch }}
+          path: release-tools
           persist-credentials: false
 
       - name: Checkout tagged plugin
@@ -51,16 +52,17 @@ jobs:
           python -m pip install 'astrbot==4.14.6' pytest Pillow pypdf 'PyYAML>=6,<7' -r astrbot_plugin_custom_help/requirements.txt
 
       - name: Test tagged plugin
-        run: python -m pytest astrbot_plugin_custom_help/tests -q
+        working-directory: astrbot_plugin_custom_help
+        run: python -m pytest tests -q
 
       - name: Package and validate version
         id: package
         run: |
-          python .github/scripts/package_release.py \
+          python release-tools/.github/scripts/package_release.py \
             --source astrbot_plugin_custom_help \
             --tag "$RELEASE_TAG" \
             --output dist \
-            --notes-dir .github/release-notes
+            --notes-dir release-tools/.github/release-notes
 
       - name: Publish release and installation ZIP
         env:
