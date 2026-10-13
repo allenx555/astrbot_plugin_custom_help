@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "title": "机器人功能菜单",
+  "plugins": [
+    {
+      "id": "custom:images",
+      "name": "images",
+      "display_name": "图片功能",
+      "desc": "发送图片后使用以下功能",
+      "visible": true,
+      "nodes": [
+        {
+          "id": "custom:image-search",
+          "name": "搜图",
+          "desc": "查找图片来源",
+          "visible": true
+        },
+        {
+          "id": "custom:image-admin",
+          "name": "图片管理",
+          "desc": "管理员维护命令",
+          "tag": "admin",
+          "visible": false
+        }
+      ]
+    }
+  ],
+  "inventory": []
+}

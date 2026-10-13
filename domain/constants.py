@@ -63,7 +63,7 @@ class DefaultCFG:
         "session_controller",
         "builtin_commands",
         "astrbot-reminder",
-        "astrbot_plugin_help_typst",
+        "astrbot_plugin_custom_help",
     }
 
     # 4. 默认配色 (Original Palette)

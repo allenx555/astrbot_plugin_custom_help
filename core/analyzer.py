@@ -3,26 +3,26 @@ from typing import Any
 
 from astrbot.api import logger
 from astrbot.api.star import Context
-from astrbot.core.star.star_handler import (
-    star_handlers_registry,
-    StarHandlerMetadata,
-    EventType,
-)
+from astrbot.core.agent.mcp_client import MCPTool
 from astrbot.core.star.filter.command import CommandFilter
 from astrbot.core.star.filter.command_group import CommandGroupFilter
-from astrbot.core.star.filter.permission import PermissionTypeFilter
-from astrbot.core.star.filter.regex import RegexFilter
-from astrbot.core.star.filter.platform_adapter_type import (
-    PlatformAdapterTypeFilter,
-    PlatformAdapterType,
-)
 from astrbot.core.star.filter.event_message_type import (
-    EventMessageTypeFilter,
     EventMessageType,
+    EventMessageTypeFilter,
 )
-from astrbot.core.agent.mcp_client import MCPTool
+from astrbot.core.star.filter.permission import PermissionType, PermissionTypeFilter
+from astrbot.core.star.filter.platform_adapter_type import (
+    PlatformAdapterType,
+    PlatformAdapterTypeFilter,
+)
+from astrbot.core.star.filter.regex import RegexFilter
+from astrbot.core.star.star_handler import (
+    EventType,
+    StarHandlerMetadata,
+    star_handlers_registry,
+)
 
-from ..domain import PluginMetadata, RenderNode, InternalCFG, TypstPluginConfig
+from ..domain import InternalCFG, PluginMetadata, RenderNode, TypstPluginConfig
 
 
 class BaseAnalyzer:
@@ -74,9 +74,7 @@ class BaseAnalyzer:
             logger.error(f"[HelpTypst] 分析失败: {e}", exc_info=True)
             return []
 
-    def _is_match(
-        self, name: str, display: str | None, desc: str, query: str
-    ) -> bool:
+    def _is_match(self, name: str, display: str | None, desc: str, query: str) -> bool:
         """基础匹配检查"""
         if query in name.lower():
             return True
@@ -166,6 +164,92 @@ class BaseAnalyzer:
 class CommandAnalyzer(BaseAnalyzer):
     """指令分析器：处理 CommandFilter / CommandGroupFilter"""
 
+    def export_all(self) -> list[PluginMetadata]:
+        """导出所有已注册命令，不应用黑名单、启用状态或用户权限过滤。"""
+        stars = list(self.context.get_all_stars())
+        grouped = defaultdict(list)
+        owners = {}
+        for module, handlers in self._group_handlers_by_module().items():
+            matches = [
+                s
+                for s in stars
+                if getattr(s, "module_path", None)
+                and (module == s.module_path or module.startswith(s.module_path + "."))
+            ]
+            owner = max(matches, key=lambda s: len(s.module_path)) if matches else None
+            key = owner.module_path if owner else module
+            owners[key] = owner
+            grouped[key].extend(handlers)
+        results = []
+        for module, handlers in grouped.items():
+            nodes = self._build_plugin_command_tree(handlers, strict=True)
+            if not nodes:
+                continue
+            owner = owners[module]
+            info = (
+                self._get_safe_plugin_info(owner)
+                if owner
+                else {
+                    "name": module,
+                    "display_name": "系统/未关联命令",
+                    "desc": "",
+                    "version": "",
+                }
+            )
+            results.append(
+                PluginMetadata(
+                    name=info["name"],
+                    display_name=info["display_name"],
+                    desc=info["desc"],
+                    version=info["version"],
+                    nodes=nodes,
+                    activated=getattr(owner, "activated", True),
+                    reserved=getattr(owner, "reserved", owner is None),
+                )
+            )
+        return sorted(results, key=lambda p: p.name)
+
+    def export_inventory(self) -> list[dict[str, Any]]:
+        """附带完整 Handler/工具清单，包括正则、事件和停用项。"""
+        inventory = []
+        for h in star_handlers_registry:
+            if isinstance(h, StarHandlerMetadata):
+                inventory.append(
+                    {
+                        "kind": "handler",
+                        "module": h.handler_module_path,
+                        "name": h.handler_name,
+                        "desc": h.desc or "",
+                        "enabled": getattr(h, "enabled", True),
+                        "event": getattr(
+                            getattr(h, "event_type", None), "name", "unknown"
+                        ),
+                        "filters": [
+                            {
+                                "type": type(f).__name__,
+                                "pattern": str(getattr(f, "regex", "")),
+                            }
+                            for f in h.event_filters
+                        ],
+                    }
+                )
+        manager = (
+            self.context.get_llm_tool_manager()
+            if hasattr(self.context, "get_llm_tool_manager")
+            else None
+        )
+        for tool in getattr(manager, "func_list", []):
+            inventory.append(
+                {
+                    "kind": "tool",
+                    "name": tool.name,
+                    "module": getattr(tool, "handler_module_path", ""),
+                    "desc": getattr(tool, "description", ""),
+                    "enabled": getattr(tool, "active", True),
+                }
+            )
+        return inventory
+
     def analyze_hierarchy(self) -> list[PluginMetadata]:
         handlers_map = self._group_handlers_by_module()
         results = []
@@ -238,7 +322,7 @@ class CommandAnalyzer(BaseAnalyzer):
         return results
 
     def _build_plugin_command_tree(
-        self, handlers: list[StarHandlerMetadata]
+        self, handlers: list[StarHandlerMetadata], strict: bool = False
     ) -> list[RenderNode]:
         nodes = []
         # 黑名单扫描：防止子组重复出现在顶层
@@ -246,7 +330,7 @@ class CommandAnalyzer(BaseAnalyzer):
 
         # 1. 顶级组
         for handler in handlers:
-            if handler.handler_name in child_handlers_blacklist:
+            if id(handler) in child_handlers_blacklist:
                 continue
             group_filter = self._get_filter(handler, CommandGroupFilter)
             if group_filter:
@@ -255,13 +339,15 @@ class CommandAnalyzer(BaseAnalyzer):
                     if node:
                         nodes.append(node)
                 except Exception as e:
+                    if strict:
+                        raise
                     logger.warning(
                         f"[HelpTypst] 解析指令组 {handler.handler_name} 失败: {e}"
                     )
 
         # 2. 独立指令
         for handler in handlers:
-            if handler.handler_name in child_handlers_blacklist:
+            if id(handler) in child_handlers_blacklist:
                 continue
             if self._get_filter(handler, CommandGroupFilter):
                 continue
@@ -272,6 +358,8 @@ class CommandAnalyzer(BaseAnalyzer):
                     if node:
                         nodes.append(node)
                 except Exception as e:
+                    if strict:
+                        raise
                     logger.warning(
                         f"[HelpTypst] 解析指令 {handler.handler_name} 失败: {e}"
                     )
@@ -279,22 +367,24 @@ class CommandAnalyzer(BaseAnalyzer):
         self._sort_nodes(nodes)
         return nodes
 
-    def _scan_all_children(self, handlers: list[StarHandlerMetadata]) -> set[str]:
+    def _scan_all_children(self, handlers: list[StarHandlerMetadata]) -> set[int]:
         blacklist = set()
         groups_map = {}
         for h in handlers:
             gf = self._get_filter(h, CommandGroupFilter)
             if gf:
-                groups_map[gf.group_name] = h.handler_name
+                groups_map[id(gf)] = id(h)
+                if getattr(gf, "parent_group", None) is not None:
+                    blacklist.add(id(h))
 
         def _scan_recursive(filter_obj):
             h_md = getattr(filter_obj, "handler_md", None)
             if h_md and hasattr(h_md, "handler_name"):
-                blacklist.add(h_md.handler_name)
+                blacklist.add(id(h_md))
 
             if isinstance(filter_obj, CommandGroupFilter):
-                if filter_obj.group_name in groups_map:
-                    blacklist.add(groups_map[filter_obj.group_name])
+                if id(filter_obj) in groups_map:
+                    blacklist.add(groups_map[id(filter_obj)])
 
             if hasattr(filter_obj, "sub_command_filters"):
                 for sub in filter_obj.sub_command_filters:
@@ -322,18 +412,25 @@ class CommandAnalyzer(BaseAnalyzer):
             name=group_filter.group_name,
             desc=desc or "指令组",
             is_group=True,
-            tag=self._check_permission(handler),
+            tag=self._check_permission(handler, group_filter),
+            aliases=sorted(getattr(group_filter, "alias", [])),
+            enabled=getattr(handler, "enabled", True),
             children=children,
         )
 
     def _process_sub_filter(self, filter_obj: Any) -> RenderNode | None:
         handler = getattr(filter_obj, "handler_md", None)
         desc = self._get_desc_safely(handler)
-        tag = self._check_permission(handler) if handler else "normal"
+        tag = self._check_permission(handler, filter_obj)
 
         if isinstance(filter_obj, CommandFilter):
             return RenderNode(
-                name=filter_obj.command_name, desc=desc, is_group=False, tag=tag
+                name=filter_obj.command_name,
+                desc=desc,
+                is_group=False,
+                tag=tag,
+                aliases=sorted(getattr(filter_obj, "alias", [])),
+                enabled=getattr(handler, "enabled", True),
             )
 
         elif isinstance(filter_obj, CommandGroupFilter):
@@ -349,6 +446,8 @@ class CommandAnalyzer(BaseAnalyzer):
                 desc=desc or "子指令组",
                 is_group=True,
                 tag=tag,
+                aliases=sorted(getattr(filter_obj, "alias", [])),
+                enabled=getattr(handler, "enabled", True),
                 children=children,
             )
         return None
@@ -361,17 +460,25 @@ class CommandAnalyzer(BaseAnalyzer):
             name=cmd_filter.command_name,
             desc=desc,
             is_group=False,
-            tag=self._check_permission(handler),
+            tag=self._check_permission(handler, cmd_filter),
+            aliases=sorted(getattr(cmd_filter, "alias", [])),
+            enabled=getattr(handler, "enabled", True),
         )
 
     def _sort_nodes(self, nodes: list[RenderNode]):
         nodes.sort(key=lambda x: (x.is_group, x.name))
 
-    def _check_permission(self, handler: Any) -> str:
-        if not handler or not hasattr(handler, "event_filters"):
-            return "normal"
-        for f in handler.event_filters:
-            if isinstance(f, PermissionTypeFilter):
+    def _check_permission(self, handler: Any, command_filter=None) -> str:
+        filters = list(getattr(handler, "event_filters", []))
+        current = command_filter
+        while current is not None:
+            filters.extend(getattr(current, "custom_filter_list", []))
+            current = getattr(current, "parent_group", None)
+        for f in filters:
+            if (
+                isinstance(f, PermissionTypeFilter)
+                and f.permission_type != PermissionType.MEMBER
+            ):
                 return "admin"
         return "normal"
 
