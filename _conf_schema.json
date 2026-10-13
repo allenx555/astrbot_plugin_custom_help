@@ -15,15 +15,15 @@
       "session_controller",
       "builtin_commands",
       "astrbot-reminder", 
-      "astrbot_plugin_help_typst"
+      "astrbot_plugin_custom_help"
     ],
-    "hint": "屏蔽不想展示、导致问题的插件菜单 (使用 name 字段)"
+    "hint": "首次导出菜单时将这些插件默认设为隐藏，完整导出不会遗漏它们。固定菜单请编辑 menu.json 的 visible 并手动 build；此项仍作用于事件/过滤器调试视图。"
   },
   "custom_font_path": {
     "description": "自定义字体目录",
     "type": "string",
     "default": "",
-    "hint": "绝对路径。缺省值 .../data/plugin_data/astrbot_plugin_help_typst/fonts"
+    "hint": "绝对路径。缺省值 .../data/plugin_data/astrbot_plugin_custom_help/fonts"
   },
   "rendering": {
     "description": "渲染引擎设置",

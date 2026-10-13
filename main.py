@@ -1,14 +1,15 @@
 import asyncio
 from pathlib import Path
 
-from astrbot.api import logger, AstrBotConfig
-from astrbot.api.event import filter, AstrMessageEvent
-from astrbot.api.star import Context, Star, StarTools
+from astrbot.api import AstrBotConfig, logger
+from astrbot.api.event import AstrMessageEvent, filter
 from astrbot.api.message_components import Image
+from astrbot.api.star import Context, Star, StarTools
 
+from .core import CommandAnalyzer, EventAnalyzer, FilterAnalyzer, TypstRenderer
+from .core.menu import MenuDocument, MenuStore, export_document, search_published
 from .domain import InternalCFG, TypstPluginConfig
 from .utils import FontManager, HelpHint, MsgRecall, TypstLayout
-from .core import CommandAnalyzer, EventAnalyzer, FilterAnalyzer, TypstRenderer
 
 
 class HelpTypst(Star):
@@ -25,22 +26,24 @@ class HelpTypst(Star):
         # 2. 配置加载
         self.config = config
         self.plugin_config = TypstPluginConfig.load(config)
-        
+
         # 3. 获取字体
         raw_path = self.plugin_config.custom_font_path
         if raw_path and raw_path.strip():
-            self.user_font_dir = Path(raw_path)          # 自定义字体目录
+            self.user_font_dir = Path(raw_path)  # 自定义字体目录
         else:
-            self.user_font_dir = self.data_dir / "fonts" # 缺省值
+            self.user_font_dir = self.data_dir / "fonts"  # 缺省值
 
         try:
             self.user_font_dir.mkdir(parents=True, exist_ok=True)
         except Exception as e:
-            if not raw_path: 
+            if not raw_path:
                 logger.warning(f"[HelpTypst] 无法创建默认字体目录: {e}")
 
-        self.builtin_font_dir = self.plugin_dir / "resources" / InternalCFG.NAME_FONT_DIR # 内置
-        self.font_dirs = [self.builtin_font_dir, self.user_font_dir]                      # 汇总
+        self.builtin_font_dir = (
+            self.plugin_dir / "resources" / InternalCFG.NAME_FONT_DIR
+        )  # 内置
+        self.font_dirs = [self.builtin_font_dir, self.user_font_dir]  # 汇总
 
         # 3. 初始化组件
         self.font_manager = FontManager(self.font_dirs)
@@ -63,13 +66,15 @@ class HelpTypst(Star):
         self.flt_analyzer = FilterAnalyzer(context, self.plugin_config)
 
         self.prefixes: list[str] = []
+        self.menu_store = MenuStore(self.data_dir)
+        self._menu_lock = asyncio.Lock()
 
     async def initialize(self):
         """异步初始化"""
         self._init_prefixes(self.context)
         await asyncio.to_thread(self._refresh_resources)
         logger.info("[HelpTypst] 初始化完成")
-    
+
     def _refresh_resources(self):
         try:
             # 1. 扫描
@@ -106,10 +111,10 @@ class HelpTypst(Star):
                 return
 
             logger.debug(f"[HelpTypst] 清理 {len(temp_files)} 个缓存文件...")
-            
+
             for f in temp_files:
                 try:
-                    if f.exists(): # 双重检查
+                    if f.exists():  # 双重检查
                         f.unlink()
                 except OSError:
                     pass
@@ -135,7 +140,7 @@ class HelpTypst(Star):
                 self.context, "_star_manager", None
             )  # hack: 获取 PluginManager 实例
             if pm:
-                plugin_name = getattr(self, "name", "astrbot_plugin_help_typst")
+                plugin_name = getattr(self, "name", "astrbot_plugin_custom_help")
                 yield event.plain_result(
                     f"✅ 扫描完成 ({count} fonts)。正在重载以刷新面板..."
                 )
@@ -154,6 +159,105 @@ class HelpTypst(Star):
         except Exception as e:
             logger.error(f"[HelpTypst] 自我重载异常: {e}")
 
+    @typst.command("export")
+    @filter.permission_type(filter.PermissionType.ADMIN)
+    async def export_menu(self, event: AstrMessageEvent):
+        """导出完整命令清单，保留已有菜单编辑。"""
+        try:
+            async with self._menu_lock:
+                # Runtime registry access stays on the event loop.
+                plugins = self.cmd_analyzer.export_all()
+                inventory = self.cmd_analyzer.export_inventory()
+                existing = (
+                    await asyncio.to_thread(MenuDocument.read, self.menu_store.source)
+                    if self.menu_store.source.exists()
+                    else None
+                )
+                document = export_document(
+                    plugins, self.plugin_config.ignored_plugins, inventory, existing
+                )
+                await asyncio.to_thread(self.menu_store.save_source, document)
+            yield event.plain_result(
+                f"已导出 {len(document.plugins)} 个命令分类（含隐藏、系统、管理员及仍注册的停用项）。\n"
+                f"文件：{self.menu_store.source}\n"
+                "修改插件或节点的 visible，再执行 /typst build。重新导出会保留编辑；新增项默认隐藏。"
+            )
+        except Exception as e:
+            logger.error(f"[HelpTypst] 菜单导出失败: {e}", exc_info=True)
+            yield event.plain_result(f"菜单导出失败，原文件保留：{e}")
+
+    @typst.command("build")
+    @filter.permission_type(filter.PermissionType.ADMIN)
+    async def build_menu(self, event: AstrMessageEvent):
+        """从 menu.json 手动生成并发布固定菜单。"""
+        try:
+            async with self._menu_lock:
+                document = await asyncio.to_thread(
+                    MenuDocument.read, self.menu_store.source
+                )
+                plugins = document.visible_plugins()
+                if not plugins:
+                    raise ValueError(
+                        "没有可见命令，请检查插件及节点的 visible/available"
+                    )
+                generation = await asyncio.to_thread(self.menu_store.new_generation)
+                self._init_prefixes(self.context)
+                prefixes = list(self.prefixes)
+                fonts = self.font_manager.get_render_font_list(
+                    self.plugin_config.appearance.get_active_font_order()
+                )
+
+                def pipeline(path):
+                    self.layout.dump_layout_json(
+                        plugins, path, document.title, "command", prefixes, fonts
+                    )
+                    return len(plugins)
+
+                renderer = TypstRenderer(
+                    self,
+                    generation,
+                    self.template_path,
+                    self.font_dirs,
+                    self.plugin_config,
+                )
+                result, error = await renderer.render(pipeline, "command")
+                if not result:
+                    raise RuntimeError(error)
+                published = await asyncio.to_thread(
+                    self.menu_store.publish,
+                    generation,
+                    result.images,
+                    document,
+                    prefixes,
+                )
+            yield event.plain_result(
+                f"菜单已生成：{len(result.images)} 张图片，{len(plugins)} 个可见分类。\n"
+                f"生成时间：{published['generated_at']}\n使用 /helps 查看。"
+            )
+        except FileNotFoundError:
+            yield event.plain_result(
+                "菜单文件不存在，请先执行 /typst export。旧的已发布菜单保持可用。"
+            )
+        except Exception as e:
+            logger.error(f"[HelpTypst] 手动生成失败: {e}", exc_info=True)
+            yield event.plain_result(f"菜单生成失败，旧的已发布菜单保持可用：{e}")
+
+    @typst.command("status")
+    @filter.permission_type(filter.PermissionType.ADMIN)
+    async def menu_status(self, event: AstrMessageEvent):
+        """查看菜单源文件及已发布图片状态。"""
+        try:
+            payload, images, _ = await asyncio.to_thread(self.menu_store.read_published)
+            yield event.plain_result(
+                f"菜单文件：{self.menu_store.source}\n"
+                f"生成时间：{payload['generated_at']}\n图片数量：{len(images)}\n"
+                "编辑菜单后需执行 /typst build，重载不会自动生成。"
+            )
+        except Exception as e:
+            yield event.plain_result(
+                f"菜单尚未发布或不可用：{e}\n菜单文件：{self.menu_store.source}"
+            )
+
     async def _handle_request(
         self,
         event: AstrMessageEvent,
@@ -168,7 +272,9 @@ class HelpTypst(Star):
         if self.plugin_config.enable_waiting_message:
             # 1. 发送提示
             hint_text = (
-                self.hint.msg_searching(query) if query else self.hint.msg_rendering(mode)
+                self.hint.msg_searching(query)
+                if query
+                else self.hint.msg_rendering(mode)
             )
             wait_msg_id = await self.msg.send_wait(event, hint_text)
 
@@ -207,7 +313,9 @@ class HelpTypst(Star):
         # 4. 处理结果
         if result:
             try:
-                yield event.chain_result([Image.fromFileSystem(p) for p in result.images])
+                yield event.chain_result(
+                    [Image.fromFileSystem(p) for p in result.images]
+                )
             finally:
                 # 后台任务清理文件列表
                 if result.temp_files:
@@ -241,13 +349,29 @@ class HelpTypst(Star):
 
     @filter.command("helps")
     async def show_menu(self, event: AstrMessageEvent, query: str = ""):
-        """显示指令菜单"""
-        async for r in self._handle_request(
-            event, self.cmd_analyzer, "AstrBot 指令菜单", "command", query
-        ):
-            yield r
+        """发送固定菜单，关键词搜索已发布的可见内容。"""
+        try:
+            payload, images, document = await asyncio.to_thread(
+                self.menu_store.read_published
+            )
+            if query.strip():
+                chunks = search_published(
+                    document, query, payload.get("prefixes", ["/"])
+                )
+                if not chunks:
+                    yield event.plain_result("已发布菜单中没有匹配的可见功能。")
+                for chunk in chunks:
+                    yield event.plain_result(chunk)
+            else:
+                yield event.chain_result([Image.fromFileSystem(str(p)) for p in images])
+        except Exception:
+            logger.warning("[HelpTypst] 已发布菜单不可用", exc_info=True)
+            yield event.plain_result(
+                "菜单尚未生成或图片不可用，请管理员执行 /typst export 和 /typst build。"
+            )
 
     @filter.command("events")
+    @filter.permission_type(filter.PermissionType.ADMIN)
     async def show_events(self, event: AstrMessageEvent, query: str = ""):
         """显示事件监听列表"""
         async for r in self._handle_request(
@@ -256,6 +380,7 @@ class HelpTypst(Star):
             yield r
 
     @filter.command("filters")
+    @filter.permission_type(filter.PermissionType.ADMIN)
     async def show_filters(self, event: AstrMessageEvent, query: str = ""):
         """显示过滤器详情"""
         async for r in self._handle_request(

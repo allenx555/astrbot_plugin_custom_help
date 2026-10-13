@@ -1,11 +1,23 @@
-# 📂︎ Astrbot Plugin Help Typst | 插件菜单(typst实现)
+# AstrBot Custom Help | 自定义帮助菜单
+
+## 手动发布菜单
+
+本分支已改为固定菜单：`/helps` 只发送管理员手动生成的图片，关键词搜索只读取已发布的可见菜单并返回文本。
+
+1. 管理员执行 `/typst export`，完整导出注册的命令，包括黑名单、系统和管理员命令。
+2. 编辑插件数据目录中的 `menu.json`，通过插件及节点的 `visible` 控制展示。
+3. 执行 `/typst build` 生成并发布图片；`/typst status` 查看状态。
+
+重复导出保留已有编辑及顺序，新发现的功能默认隐藏。生成失败继续使用旧图；修改源文件、插件重载及服务重启均不会自动生成。
+
+详见 [手动菜单说明](MANUAL_MENU.md)，以及 [菜单 JSON 示例](menu.example.json)。下方预览及历史介绍来自原插件；图片搜索已改为文本搜索，事件和过滤器调试命令仅限管理员。
 
 <div align="center">
 
 [![AstrBot](https://img.shields.io/badge/AstrBot-Plugin-purple?style=flat-square)](https://github.com/Soulter/AstrBot)
 [![Python](https://img.shields.io/badge/Python-3.10+-blue?style=flat-square)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](./LICENSE)
-[![Version](https://img.shields.io/badge/Version-0.1.1-orange?style=flat-square)]()
+[![Version](https://img.shields.io/badge/Version-0.2.0-orange?style=flat-square)]()
 
 ** 以优雅的方式组织你的插件菜单 **
 <br>
@@ -63,7 +75,7 @@ Zhalslar(饰乐)  https://github.com/Zhalslar
 文档显式指定 > 项目字体目录 > 系统字体库
 * 文档显式指定：通过 #set text(font: "font-family-name") 直接指定，优先级最高
 * 项目字体目录：即本插件的根目录下的 ./resources/fonts <br>
-~~后面会考虑增加额外的目录支持~~已完成，缺省值为 `.../data/plugin_data/astrbot_plugin_help_typst/fonts` 🚨 docker 用户记得确保自定义字体目录已被挂载
+~~后面会考虑增加额外的目录支持~~已完成，缺省值为 `.../data/plugin_data/astrbot_plugin_custom_help/fonts` 🚨 docker 用户记得确保自定义字体目录已被挂载
 * 系统字体库：获取系统默认字体目录 ( Windows、macOS 应该有官方支持，Linux 未测试支持度如何；🚨 docker 环境可能需要安装字体依赖）
 
 ## 🌳 目录结构（初步预期）
@@ -97,3 +109,5 @@ astrbot_plugin_typst_menu/
 🔔 Merry Christmas~<br>
 Made with 😊 by LilDawn
 </div>
+
+本项目基于 [bylkuse/astrbot_plugin_help_typst](https://github.com/bylkuse/astrbot_plugin_help_typst)，并保留 casama233 分支的 JSON 暂存修复。

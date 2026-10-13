@@ -9,7 +9,7 @@ PLUGIN_ROOT = Path(__file__).resolve().parents[1]
 if str(PLUGIN_ROOT.parent) not in sys.path:
     sys.path.insert(0, str(PLUGIN_ROOT.parent))
 
-from astrbot_plugin_help_typst.core import worker
+from astrbot_plugin_custom_help.core import worker
 
 
 def _render_task(template: Path, output_dir: Path, payload: str) -> worker.RenderTask:
