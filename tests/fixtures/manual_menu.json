@@ -1,0 +1,2167 @@
+{
+  "schema_version": 1,
+  "title": "AstrBot 指令菜单",
+  "plugins": [
+    {
+      "id": "astrbot_plugin_imgexploration",
+      "name": "astrbot_plugin_imgexploration",
+      "display_name": "图片搜索",
+      "desc": "通过上传图片搜索其来源，支持 SauceNAO、Google Lens、Ascii2d 等搜图引擎，并结合LLM改善使用体验。",
+      "version": "v1.3.0",
+      "visible": true,
+      "available": true,
+      "reserved": false,
+      "nodes": [
+        {
+          "id": "[\"astrbot_plugin_imgexploration\", \"搜图\"]",
+          "name": "搜图",
+          "desc": "搜图指令 - 附带、回复或随后发送一张图片进行搜索",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "builtin_commands",
+      "name": "builtin_commands",
+      "display_name": "机器人内置功能",
+      "desc": "AstrBot's internal plugin, providing all built-in commands such as /reset.",
+      "version": "0.0.1",
+      "visible": true,
+      "available": true,
+      "reserved": true,
+      "nodes": [
+        {
+          "id": "[\"builtin_commands\", \"dashboard_update\"]",
+          "name": "dashboard_update",
+          "desc": "Update AstrBot WebUI",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "admin",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"builtin_commands\", \"help\"]",
+          "name": "help",
+          "desc": "Show help message",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"builtin_commands\", \"name\"]",
+          "name": "name",
+          "desc": "Set display name for current UMO",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "admin",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"builtin_commands\", \"new\"]",
+          "name": "new",
+          "desc": "Start a new conversation, keeping previous history.",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "admin",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"builtin_commands\", \"provider\"]",
+          "name": "provider",
+          "desc": "View or switch LLM Provider",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "admin",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"builtin_commands\", \"reset\"]",
+          "name": "reset",
+          "desc": "Start a new conversation, keeping previous history.",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "admin",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"builtin_commands\", \"set\"]",
+          "name": "set",
+          "desc": "Set session variable",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"builtin_commands\", \"sid\"]",
+          "name": "sid",
+          "desc": "Get session ID and other related information",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"builtin_commands\", \"stats\"]",
+          "name": "stats",
+          "desc": "Show token usage statistics for the current conversation",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"builtin_commands\", \"stop\"]",
+          "name": "stop",
+          "desc": "Stop agent execution",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"builtin_commands\", \"unset\"]",
+          "name": "unset",
+          "desc": "Unset session variable",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "astrbot_plugin_custom_help",
+      "name": "astrbot_plugin_custom_help",
+      "display_name": "自定义帮助菜单",
+      "desc": "基于 Typst 的手动发布菜单，支持完整导出、JSON 自定义显示隐藏、固定图片及可见菜单文本搜索",
+      "version": "v0.2.0",
+      "visible": true,
+      "available": true,
+      "reserved": false,
+      "nodes": [
+        {
+          "id": "[\"astrbot_plugin_custom_help\", \"events\"]",
+          "name": "events",
+          "desc": "显示事件监听列表",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "admin",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_custom_help\", \"filters\"]",
+          "name": "filters",
+          "desc": "显示过滤器详情",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "admin",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_custom_help\", \"helps\"]",
+          "name": "helps",
+          "desc": "发送固定菜单，关键词搜索已发布的可见内容。",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_custom_help\", \"typst\"]",
+          "name": "typst",
+          "desc": "指令组",
+          "visible": true,
+          "available": true,
+          "is_group": true,
+          "tag": "admin",
+          "aliases": [],
+          "children": [
+            {
+              "id": "[\"astrbot_plugin_custom_help\", \"typst\", \"build\"]",
+              "name": "build",
+              "desc": "从 menu.json 手动生成并发布固定菜单。",
+              "visible": true,
+              "available": true,
+              "is_group": false,
+              "tag": "admin",
+              "aliases": [],
+              "children": []
+            },
+            {
+              "id": "[\"astrbot_plugin_custom_help\", \"typst\", \"export\"]",
+              "name": "export",
+              "desc": "导出完整命令清单，保留已有菜单编辑。",
+              "visible": true,
+              "available": true,
+              "is_group": false,
+              "tag": "admin",
+              "aliases": [],
+              "children": []
+            },
+            {
+              "id": "[\"astrbot_plugin_custom_help\", \"typst\", \"font\"]",
+              "name": "font",
+              "desc": "扫描字体并重载插件",
+              "visible": true,
+              "available": true,
+              "is_group": false,
+              "tag": "admin",
+              "aliases": [],
+              "children": []
+            },
+            {
+              "id": "[\"astrbot_plugin_custom_help\", \"typst\", \"status\"]",
+              "name": "status",
+              "desc": "查看菜单源文件及已发布图片状态。",
+              "visible": true,
+              "available": true,
+              "is_group": false,
+              "tag": "admin",
+              "aliases": [],
+              "children": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "astrbot_plugin_pixiv_reborn",
+      "name": "astrbot_plugin_pixiv_reborn",
+      "display_name": "AstrBot Pixiv 搜索插件",
+      "desc": "通过标签在 Pixiv 上搜索插画。用法 /pixiv tag1,tag2,... 可在配置中设置认证信息、返回数量和 R18 过滤模式。",
+      "version": "1.7.4",
+      "visible": false,
+      "available": true,
+      "reserved": false,
+      "nodes": [
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv\"]",
+          "name": "pixiv",
+          "desc": "处理 /pixiv 命令，默认为标签搜索功能",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_ai_show_settings\"]",
+          "name": "pixiv_ai_show_settings",
+          "desc": "设置是否展示AI生成作品",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_and\"]",
+          "name": "pixiv_and",
+          "desc": "处理 /pixiv_and 命令，进行 AND 逻辑深度搜索",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_config\"]",
+          "name": "pixiv_config",
+          "desc": "查看或动态设置 Pixiv 插件参数（除 refresh_token）。",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_daily_bind\"]",
+          "name": "pixiv_daily_bind",
+          "desc": "在当前私聊绑定官方日榜定时推送。",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "admin",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_daily_off\"]",
+          "name": "pixiv_daily_off",
+          "desc": "关闭日榜定时推送，保留绑定配置。",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "admin",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_daily_status\"]",
+          "name": "pixiv_daily_status",
+          "desc": "查看定时推送状态。",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "admin",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_deepsearch\"]",
+          "name": "pixiv_deepsearch",
+          "desc": "深度搜索 Pixiv 插画，通过翻页获取多页结果",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_fanbox_artist\"]",
+          "name": "pixiv_fanbox_artist",
+          "desc": "按 Nekohouse artists 搜索 Fanbox 创作者",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_fanbox_creator\"]",
+          "name": "pixiv_fanbox_creator",
+          "desc": "获取 Fanbox 创作者信息和最近帖子",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_fanbox_post\"]",
+          "name": "pixiv_fanbox_post",
+          "desc": "获取 Fanbox 帖子详情",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_fanbox_recommended\"]",
+          "name": "pixiv_fanbox_recommended",
+          "desc": "获取 Fanbox 推荐创作者",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_help\"]",
+          "name": "pixiv_help",
+          "desc": "生成并返回帮助信息",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_hot\"]",
+          "name": "pixiv_hot",
+          "desc": "按热度（收藏数）搜索作品",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_illust_comments\"]",
+          "name": "pixiv_illust_comments",
+          "desc": "获取指定作品的评论",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_illust_new\"]",
+          "name": "pixiv_illust_new",
+          "desc": "获取大家的新插画作品",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_novel\"]",
+          "name": "pixiv_novel",
+          "desc": "处理 /pixiv_novel 命令，搜索 Pixiv 小说",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_novel_comments\"]",
+          "name": "pixiv_novel_comments",
+          "desc": "获取指定小说的评论",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_novel_download\"]",
+          "name": "pixiv_novel_download",
+          "desc": "根据ID下载Pixiv小说为pdf文件",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_novel_new\"]",
+          "name": "pixiv_novel_new",
+          "desc": "获取大家的新小说",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_novel_recommended\"]",
+          "name": "pixiv_novel_recommended",
+          "desc": "获取 Pixiv 推荐小说",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_novel_series\"]",
+          "name": "pixiv_novel_series",
+          "desc": "获取小说系列详情",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_random_add\"]",
+          "name": "pixiv_random_add",
+          "desc": "添加随机搜索标签",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_random_del\"]",
+          "name": "pixiv_random_del",
+          "desc": "删除随机搜索标签",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_random_force\"]",
+          "name": "pixiv_random_force",
+          "desc": "强制执行当前群聊的随机搜索（调试用）",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_random_list\"]",
+          "name": "pixiv_random_list",
+          "desc": "列出当前群聊/用户的随机搜索标签",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_random_ranking_add\"]",
+          "name": "pixiv_random_ranking_add",
+          "desc": "添加随机排行榜配置",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_random_ranking_del\"]",
+          "name": "pixiv_random_ranking_del",
+          "desc": "删除随机排行榜配置",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_random_ranking_list\"]",
+          "name": "pixiv_random_ranking_list",
+          "desc": "列出当前群聊的随机排行榜配置",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_random_resume\"]",
+          "name": "pixiv_random_resume",
+          "desc": "恢复当前群聊的随机搜索功能",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_random_status\"]",
+          "name": "pixiv_random_status",
+          "desc": "查看随机搜索队列状态",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_random_suspend\"]",
+          "name": "pixiv_random_suspend",
+          "desc": "暂停当前群聊的随机搜索功能",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_ranking\"]",
+          "name": "pixiv_ranking",
+          "desc": "获取 Pixiv 排行榜作品",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_recommended\"]",
+          "name": "pixiv_recommended",
+          "desc": "获取 Pixiv 推荐作品",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_related\"]",
+          "name": "pixiv_related",
+          "desc": "获取与指定作品相关的其他作品",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_showcase_article\"]",
+          "name": "pixiv_showcase_article",
+          "desc": "获取特辑详情",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_specific\"]",
+          "name": "pixiv_specific",
+          "desc": "根据作品 ID 获取特定作品详情",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_subscribe_add\"]",
+          "name": "pixiv_subscribe_add",
+          "desc": "订阅画师",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_subscribe_list\"]",
+          "name": "pixiv_subscribe_list",
+          "desc": "查看当前订阅列表",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_subscribe_remove\"]",
+          "name": "pixiv_subscribe_remove",
+          "desc": "取消订阅画师",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_trending_tags\"]",
+          "name": "pixiv_trending_tags",
+          "desc": "获取 Pixiv 插画趋势标签",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_user_detail\"]",
+          "name": "pixiv_user_detail",
+          "desc": "获取 Pixiv 用户详情",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_user_illusts\"]",
+          "name": "pixiv_user_illusts",
+          "desc": "获取指定用户的作品",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_pixiv_reborn\", \"pixiv_user_search\"]",
+          "name": "pixiv_user_search",
+          "desc": "搜索 Pixiv 用户",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "astrbot_plugin_setu",
+      "name": "astrbot_plugin_setu",
+      "display_name": "瑟瑟！",
+      "desc": "随机福利图与随机本子文件插件，支持标签与数量、图片分级控制，以及 PDF/ZIP 两种本子发送格式。",
+      "version": "v2.2.0",
+      "visible": true,
+      "available": true,
+      "reserved": false,
+      "nodes": [
+        {
+          "id": "[\"astrbot_plugin_setu\", \"session_config\"]",
+          "name": "session_config",
+          "desc": "/session_config get|set|clear",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_setu\", \"setu\"]",
+          "name": "setu",
+          "desc": "/setu [count] [tags...]",
+          "visible": true,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_setu\", \"今日运势\"]",
+          "name": "今日运势",
+          "desc": "今日运势 / jrys",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [
+            "jrys"
+          ],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_setu\", \"运势刷新\"]",
+          "name": "运势刷新",
+          "desc": "运势刷新 [我|本群|全局]",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [
+            "flush_all_jrys",
+            "flush_group_jrys",
+            "flush_jrys",
+            "刷新jrys",
+            "刷新今日运势",
+            "刷新全局jrys",
+            "刷新全局今日运势",
+            "刷新本群jrys",
+            "刷新本群今日运势"
+          ],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_setu\", \"运势开关\"]",
+          "name": "运势开关",
+          "desc": "运势开关 <开|关>",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [
+            "关闭运势",
+            "开启运势"
+          ],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_setu\", \"运势用户\"]",
+          "name": "运势用户",
+          "desc": "运势用户 <拉黑|解黑|信任|取消信任> [用户]",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [
+            "信任运势用户",
+            "取消运势信任",
+            "拉黑运势用户",
+            "解除运势拉黑"
+          ],
+          "children": []
+        },
+        {
+          "id": "[\"astrbot_plugin_setu\", \"随机本子\"]",
+          "name": "随机本子",
+          "desc": "获取可选标签的随机本子 PDF。",
+          "visible": false,
+          "available": true,
+          "is_group": false,
+          "tag": "normal",
+          "aliases": [
+            "doujinshi",
+            "本子"
+          ],
+          "children": []
+        }
+      ]
+    }
+  ],
+  "inventory": [
+    {
+      "kind": "handler",
+      "module": "astrbot.builtin_stars.astrbot.main",
+      "name": "handle_session_control_agent",
+      "desc": "会话控制代理",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "EventMessageTypeFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "astrbot.builtin_stars.astrbot.main",
+      "name": "handle_empty_mention",
+      "desc": "处理只有一个 @ 或仅有唤醒前缀的消息，并等待用户下一条内容。",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "EventMessageTypeFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "astrbot.builtin_stars.astrbot.main",
+      "name": "persist_group_message",
+      "desc": "Persist an incoming message for an enabled group session.\n\n        Args:\n            event: Current platform message event.",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "PlatformAdapterTypeFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_wakepro.main",
+      "name": "on_group_msg",
+      "desc": "收到消息后",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "EventMessageTypeFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_outputpro.main",
+      "name": "on_message",
+      "desc": "收到群消息时",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "EventMessageTypeFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_wakepro.main",
+      "name": "on_decorating_result",
+      "desc": "消息发送前",
+      "enabled": true,
+      "event": "OnDecoratingResultEvent",
+      "filters": []
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_outputpro.main",
+      "name": "on_decorating_result",
+      "desc": "发送消息前",
+      "enabled": true,
+      "event": "OnDecoratingResultEvent",
+      "filters": []
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_imgexploration.main",
+      "name": "search_image_auto_mention_cmd",
+      "desc": "兼容 QQ 回复他人消息时自动插入@的搜图命令，可同时@机器人。",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "PlatformAdapterTypeFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_imgexploration.main",
+      "name": "on_message",
+      "desc": "监听所有消息，捕获图片并消费命令等待",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "PlatformAdapterTypeFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_imgexploration.main",
+      "name": "tool_get_session_images",
+      "desc": "Select session images for an explicit user source-search request\n\n        Call this tool only when the user explicitly asks to search for an image,\n        find its source, or perform a reverse image search. Do not call it merely\n        because an image is attached, quoted, replied to, described, identified, or\n        discussed. Sticker images are ignored by default; search one only when the\n        user explicitly asks to search that sticker. When explicit search intent exists, call this tool before\n        search_image.\n\n        When the user's message replies to another message, is_replied=true marks\n        the replied image; prefer it when the user refers to that image.\n\n        Searching takes a while, so in the same response that calls this tool,\n        briefly tell the user in your own voice and persona that you are looking\n        into the image's source.\n\n        Returns:\n            JSON result containing image_id, image_index, is_sticker, is_replied, and optional metadata for selection.",
+      "enabled": true,
+      "event": "OnCallingFuncToolEvent",
+      "filters": []
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_imgexploration.main",
+      "name": "tool_search_image",
+      "desc": "Search for an image source after an explicit user request\n\n        Call this tool only when the user explicitly asks to search for an image,\n        find its source, or perform a reverse image search. Do not call it merely\n        because an image is attached, quoted, replied to, described, identified, or\n        discussed. Do not use it for ordinary image conversation, visual description,\n        interpretation, or identification. Ignore sticker images by default and\n        search a sticker only when the user explicitly asks for that sticker. When\n        explicit search intent exists, call get_session_images first, then prefer\n        image_id to select the target image. Explicitly provide image_id or\n        image_index; omitting both does not select an image. If image_id is invalid\n        or expired, call get_session_images again and select a new image.\n\n        If you have not yet told the user that you are searching, briefly do so in\n        your own voice and persona in the same response that calls this tool.\n\n        Args:\n            image_index(int): Optional explicit image index; omit it when using image_id. -1 = most recent image, 1 = first/oldest image.\n            strategies(string): Optional. Omit to use default strategies. Comma-separated names: saucenao, google, ascii2d, anime. Use anime for explicit anime screenshot/episode/timestamp search requests, only when enabled; do not infer a search request from an image alone.\n            image_id(string): Optional stable image ID returned by get_session_images. Higher priority than image_index.\n\n        Returns:\n            JSON search result containing message_sent and instruction. Follow\n            instruction exactly because it defines whether the plugin already sent\n            the results and how much detail the response must contain.",
+      "enabled": true,
+      "event": "OnCallingFuncToolEvent",
+      "filters": []
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_imgexploration.main",
+      "name": "search_image_cmd",
+      "desc": "搜图指令 - 附带、回复或随后发送一张图片进行搜索\n\n        用法:\n        - 搜图 (无参数): 使用默认策略搜索\n        - 搜图 saucenao: 只使用 SauceNAO 搜索\n        - 搜图 google: 只使用 Google Lens 搜索\n        - 搜图 ascii2d: 只使用 Ascii2d 搜索\n        - 搜图 anime: 精确搜番（需启用 trace.moe）\n        - 搜图 saucenao,google: 使用多个指定策略\n          (可用英文逗号、中文逗号、顿号或空格分隔)\n\n        别名: sauce=saucenao, 2d=ascii2d, lens=google",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_setu.main",
+      "name": "regex_command",
+      "desc": "集中处理所有纯文本正则命令入口。",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "RegexFilter",
+          "pattern": "re.compile('(?:^/?(来\\\\s*(.*?)(份|个|张|点))(.*?)(?:福利|色|瑟|涩|塞)?图(?P<flags>(?:\\\\s+[rR]18)*)\\\\s*$|^/?来\\\\s*(?:一\\\\s*)?份(?P<tags>.*?)本子$|^(?!/)(今日运势|jrys)$)')"
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_setu.main",
+      "name": "setu_command",
+      "desc": "/setu [count] [tags...]",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_setu.main",
+      "name": "random_doujinshi_command",
+      "desc": "获取可选标签的随机本子 PDF。",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_setu.main",
+      "name": "session_config_command",
+      "desc": "/session_config get|set|clear",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_setu.main",
+      "name": "fortune_command",
+      "desc": "今日运势 / jrys",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_setu.main",
+      "name": "fortune_refresh_command",
+      "desc": "运势刷新 [我|本群|全局]",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_setu.main",
+      "name": "fortune_toggle_command",
+      "desc": "运势开关 <开|关>",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_setu.main",
+      "name": "fortune_user_command",
+      "desc": "运势用户 <拉黑|解黑|信任|取消信任> [用户]",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_daily_bind",
+      "desc": "在当前私聊绑定官方日榜定时推送。",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "PermissionTypeFilter",
+          "pattern": ""
+        },
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_daily_off",
+      "desc": "关闭日榜定时推送，保留绑定配置。",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "PermissionTypeFilter",
+          "pattern": ""
+        },
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_daily_status",
+      "desc": "查看定时推送状态。",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "PermissionTypeFilter",
+          "pattern": ""
+        },
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_search_illust",
+      "desc": "处理 /pixiv 命令，默认为标签搜索功能",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_illust_new",
+      "desc": "获取大家的新插画作品",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_recommended",
+      "desc": "获取 Pixiv 推荐作品",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_and",
+      "desc": "处理 /pixiv_and 命令，进行 AND 逻辑深度搜索",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_specific",
+      "desc": "根据作品 ID 获取特定作品详情",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_ranking",
+      "desc": "获取 Pixiv 排行榜作品",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_related",
+      "desc": "获取与指定作品相关的其他作品",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_deepsearch",
+      "desc": "深度搜索 Pixiv 插画，通过翻页获取多页结果\n        用法: /pixiv_deepsearch <标签1>,<标签2>,...\n        注意: 翻页深度由配置中的 deep_search_depth 参数控制",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_illust_comments",
+      "desc": "获取指定作品的评论",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_showcase_article",
+      "desc": "获取特辑详情",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_user_search",
+      "desc": "搜索 Pixiv 用户",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_user_detail",
+      "desc": "获取 Pixiv 用户详情",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_user_illusts",
+      "desc": "获取指定用户的作品",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_novel",
+      "desc": "处理 /pixiv_novel 命令，搜索 Pixiv 小说",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_novel_recommended",
+      "desc": "获取 Pixiv 推荐小说",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_novel_new",
+      "desc": "获取大家的新小说",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_novel_series",
+      "desc": "获取小说系列详情",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_novel_comments",
+      "desc": "获取指定小说的评论",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_novel_download",
+      "desc": "根据ID下载Pixiv小说为pdf文件",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_subscribe_add",
+      "desc": "订阅画师",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_subscribe_remove",
+      "desc": "取消订阅画师",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_subscribe_list",
+      "desc": "查看当前订阅列表",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_help",
+      "desc": "生成并返回帮助信息",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_random_add",
+      "desc": "添加随机搜索标签",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_random_del",
+      "desc": "删除随机搜索标签",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_random_list",
+      "desc": "列出当前群聊/用户的随机搜索标签",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_random_suspend",
+      "desc": "暂停当前群聊的随机搜索功能",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_random_resume",
+      "desc": "恢复当前群聊的随机搜索功能",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_random_status",
+      "desc": "查看随机搜索队列状态",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_random_force",
+      "desc": "强制执行当前群聊的随机搜索（调试用）",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_random_ranking_add",
+      "desc": "添加随机排行榜配置",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_random_ranking_del",
+      "desc": "删除随机排行榜配置",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_random_ranking_list",
+      "desc": "列出当前群聊的随机排行榜配置",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_trending_tags",
+      "desc": "获取 Pixiv 插画趋势标签",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_ai_show_settings",
+      "desc": "设置是否展示AI生成作品",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_config",
+      "desc": "查看或动态设置 Pixiv 插件参数（除 refresh_token）。",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_hot",
+      "desc": "按热度（收藏数）搜索作品",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_fanbox_creator",
+      "desc": "获取 Fanbox 创作者信息和最近帖子",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_fanbox_post",
+      "desc": "获取 Fanbox 帖子详情",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_fanbox_recommended",
+      "desc": "获取 Fanbox 推荐创作者",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "name": "pixiv_fanbox_artist",
+      "desc": "按 Nekohouse artists 搜索 Fanbox 创作者",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_mhcodes.main",
+      "name": "mhcodes",
+      "desc": "通过 /mh 登记角色、武器，管理本群集会码。",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "RegexFilter",
+          "pattern": "re.compile('^/?mh[ \\\\t]*(角色|武器|添加集会码|删除集会码|删除序号)(?:[ \\\\t]+([\\\\s\\\\S]*))?$|^/?mh[ \\\\t]*(查看集会码|重置集会码|帮助)$')"
+        },
+        {
+          "type": "EventMessageTypeFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "astrbot.builtin_stars.astrbot.main",
+      "name": "on_message",
+      "desc": "群聊上下文感知",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "PlatformAdapterTypeFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "astrbot.builtin_stars.astrbot.main",
+      "name": "persist_llm_response",
+      "desc": "Persist the final LLM response for an enabled group session.\n\n        Args:\n            event: Current platform message event.\n            response: Complete response produced when the agent finishes.",
+      "enabled": true,
+      "event": "OnLLMResponseEvent",
+      "filters": []
+    },
+    {
+      "kind": "handler",
+      "module": "astrbot.builtin_stars.astrbot.main",
+      "name": "decorate_llm_req",
+      "desc": "在请求 LLM 前注入人格信息、Identifier、时间、回复内容等 System Prompt",
+      "enabled": true,
+      "event": "OnLLMRequestEvent",
+      "filters": []
+    },
+    {
+      "kind": "handler",
+      "module": "astrbot.builtin_stars.astrbot.main",
+      "name": "after_message_sent",
+      "desc": "消息发送后处理",
+      "enabled": true,
+      "event": "OnAfterMessageSentEvent",
+      "filters": []
+    },
+    {
+      "kind": "handler",
+      "module": "astrbot.builtin_stars.builtin_commands.main",
+      "name": "help",
+      "desc": "Show help message",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "astrbot.builtin_stars.builtin_commands.main",
+      "name": "sid",
+      "desc": "Get session ID and other related information",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "astrbot.builtin_stars.builtin_commands.main",
+      "name": "name",
+      "desc": "Set display name for current UMO",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        },
+        {
+          "type": "PermissionTypeFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "astrbot.builtin_stars.builtin_commands.main",
+      "name": "reset",
+      "desc": "Start a new conversation, keeping previous history.\n\n        Args:\n            message: Command event identifying the session and sender.",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "PermissionTypeFilter",
+          "pattern": ""
+        },
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "astrbot.builtin_stars.builtin_commands.main",
+      "name": "stop",
+      "desc": "Stop agent execution",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "astrbot.builtin_stars.builtin_commands.main",
+      "name": "new_conv",
+      "desc": "Start a new conversation, keeping previous history.\n\n        Args:\n            message: Command event identifying the session and sender.",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "PermissionTypeFilter",
+          "pattern": ""
+        },
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "astrbot.builtin_stars.builtin_commands.main",
+      "name": "stats",
+      "desc": "Show token usage statistics for the current conversation",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "astrbot.builtin_stars.builtin_commands.main",
+      "name": "provider",
+      "desc": "View or switch LLM Provider",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        },
+        {
+          "type": "PermissionTypeFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "astrbot.builtin_stars.builtin_commands.main",
+      "name": "update_dashboard",
+      "desc": "Update AstrBot WebUI",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        },
+        {
+          "type": "PermissionTypeFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "astrbot.builtin_stars.builtin_commands.main",
+      "name": "set_variable",
+      "desc": "Set session variable",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "astrbot.builtin_stars.builtin_commands.main",
+      "name": "unset_variable",
+      "desc": "Unset session variable",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_custom_help.main",
+      "name": "typst",
+      "desc": "",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "PermissionTypeFilter",
+          "pattern": ""
+        },
+        {
+          "type": "CommandGroupFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_custom_help.main",
+      "name": "cmd_scan_fonts",
+      "desc": "扫描字体并重载插件",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_custom_help.main",
+      "name": "export_menu",
+      "desc": "导出完整命令清单，保留已有菜单编辑。",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "PermissionTypeFilter",
+          "pattern": ""
+        },
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_custom_help.main",
+      "name": "build_menu",
+      "desc": "从 menu.json 手动生成并发布固定菜单。",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "PermissionTypeFilter",
+          "pattern": ""
+        },
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_custom_help.main",
+      "name": "menu_status",
+      "desc": "查看菜单源文件及已发布图片状态。",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "PermissionTypeFilter",
+          "pattern": ""
+        },
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_custom_help.main",
+      "name": "show_menu",
+      "desc": "发送固定菜单，关键词搜索已发布的可见内容。",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_custom_help.main",
+      "name": "show_events",
+      "desc": "显示事件监听列表",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "PermissionTypeFilter",
+          "pattern": ""
+        },
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_custom_help.main",
+      "name": "show_filters",
+      "desc": "显示过滤器详情",
+      "enabled": true,
+      "event": "AdapterMessageEvent",
+      "filters": [
+        {
+          "type": "PermissionTypeFilter",
+          "pattern": ""
+        },
+        {
+          "type": "CommandFilter",
+          "pattern": ""
+        }
+      ]
+    },
+    {
+      "kind": "handler",
+      "module": "data.plugins.astrbot_plugin_imgexploration.main",
+      "name": "filter_llm_tools",
+      "desc": "工具被关闭或没有可用搜图引擎时，从当前 LLM 请求中移除搜图工具",
+      "enabled": true,
+      "event": "OnLLMRequestEvent",
+      "filters": []
+    },
+    {
+      "kind": "tool",
+      "name": "get_session_images",
+      "module": "data.plugins.astrbot_plugin_imgexploration.main",
+      "desc": "Select session images for an explicit user source-search request\n\nCall this tool only when the user explicitly asks to search for an image,\nfind its source, or perform a reverse image search. Do not call it merely\nbecause an image is attached, quoted, replied to, described, identified, or\ndiscussed. Sticker images are ignored by default; search one only when the\nuser explicitly asks to search that sticker. When explicit search intent exists, call this tool before\nsearch_image.\n\nWhen the user's message replies to another message, is_replied=true marks\nthe replied image; prefer it when the user refers to that image.\n\nSearching takes a while, so in the same response that calls this tool,\nbriefly tell the user in your own voice and persona that you are looking\ninto the image's source.",
+      "enabled": true
+    },
+    {
+      "kind": "tool",
+      "name": "search_image",
+      "module": "data.plugins.astrbot_plugin_imgexploration.main",
+      "desc": "Search for an image source after an explicit user request\n\nCall this tool only when the user explicitly asks to search for an image,\nfind its source, or perform a reverse image search. Do not call it merely\nbecause an image is attached, quoted, replied to, described, identified, or\ndiscussed. Do not use it for ordinary image conversation, visual description,\ninterpretation, or identification. Ignore sticker images by default and\nsearch a sticker only when the user explicitly asks for that sticker. When\nexplicit search intent exists, call get_session_images first, then prefer\nimage_id to select the target image. Explicitly provide image_id or\nimage_index; omitting both does not select an image. If image_id is invalid\nor expired, call get_session_images again and select a new image.\n\nIf you have not yet told the user that you are searching, briefly do so in\nyour own voice and persona in the same response that calls this tool.",
+      "enabled": true
+    },
+    {
+      "kind": "tool",
+      "name": "pixiv_search_illust",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "desc": "【图片/插画搜索专用工具】用于在Pixiv上搜索二次元插画、动漫图片、壁纸等。当用户想要：搜图、找图、来张图、发张图、看图、要壁纸、找插画、搜索某个角色/作品的图片（如'初音未来的图'、'原神壁纸'）时，必须使用此工具。此工具专门返回图片，不是网页搜索。任何涉及图片、插画、二次元图的请求都应优先使用本工具。",
+      "enabled": true
+    },
+    {
+      "kind": "tool",
+      "name": "pixiv_search_novel",
+      "module": "data.plugins.astrbot_plugin_pixiv_reborn.main",
+      "desc": "Pixiv小说搜索工具。用于搜索Pixiv上的小说，或者通过ID直接下载小说。支持输入关键词或纯数字ID。",
+      "enabled": true
+    }
+  ]
+}

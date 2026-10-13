@@ -9,7 +9,7 @@ from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 import yaml
 
-RUNTIME_DIRS = {"core", "domain", "utils", "templates", "resources", "preview"}
+RUNTIME_DIRS = {"core", "domain", "utils", "templates", "resources"}
 RUNTIME_FILES = {
     "main.py",
     "__init__.py",

@@ -24,6 +24,7 @@ def source_repo(tmp_path):
         "core/menu.py": "# menu\n",
         "resources/fonts/sample.ttf": "font",
         "tests/private_test.py": "test",
+        "preview/historical.png": "old screenshot",
         "data/menu.json": "private",
         ".github/workflows/release.yml": "workflow",
     }.items():

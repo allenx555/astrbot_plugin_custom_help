@@ -165,6 +165,98 @@ def test_export_backup_and_editing_source_does_not_change_published_search(tmp_p
     assert search_published(committed, "secret", ["/"]) == []
 
 
+def test_reusing_generation_cannot_mutate_old_snapshot_on_manifest_failure(
+    tmp_path, monkeypatch
+):
+    store, image = published(tmp_path)
+    import astrbot_plugin_custom_help.core.menu as module
+
+    replace = module.os.replace
+
+    def fail_manifest(source, destination):
+        if destination == store.manifest:
+            raise OSError("disk error")
+        replace(source, destination)
+
+    monkeypatch.setattr(module.os, "replace", fail_manifest)
+    edited = document()
+    edited.plugins[0].nodes[1].visible = True
+    with pytest.raises(OSError):
+        store.publish(image.parent, [str(image)], edited, ["/"])
+    assert not search_published(store.read_published()[2], "secret", ["/"])
+    store.discard_generation(image.parent)
+    assert image.exists()
+
+
+def test_generation_cleanup_preserves_current_recent_and_unrelated_files(tmp_path):
+    store, image = published(tmp_path)
+    import os
+    import time
+
+    old = [store.new_generation() for _ in range(5)]
+    for folder in old:
+        os.utime(folder, (time.time() - 10 * 86400,) * 2)
+    unrelated = store.root / "notes"
+    unrelated.mkdir()
+    store.collect_garbage()
+    assert image.exists() and unrelated.exists()
+    assert len([p for p in old if p.exists()]) == 2
+    with pytest.raises(ValueError):
+        store.discard_generation(tmp_path)
+
+
+def test_cancel_during_publication_does_not_delete_committed_images(
+    tmp_path, monkeypatch
+):
+    import threading
+
+    from astrbot_plugin_custom_help.core.renderer import RenderResult
+    from astrbot_plugin_custom_help.domain import TypstPluginConfig
+    from astrbot_plugin_custom_help.utils import TypstLayout
+
+    store, _ = published(tmp_path)
+    store.save_source(document())
+    bot = object.__new__(HelpTypst)
+    bot.menu_store = store
+    bot._menu_lock = asyncio.Lock()
+    bot.context = SimpleNamespace(get_config=lambda: {"wake_prefix": ["/"]})
+    bot.plugin_config = TypstPluginConfig.load({})
+    bot.font_manager = SimpleNamespace(get_render_font_list=lambda _: [])
+    bot.layout = TypstLayout(bot.plugin_config)
+
+    async def render(pipeline, mode, *, output_dir):
+        output_dir.mkdir(parents=True)
+        image = output_dir / "menu.webp"
+        Image.new("RGB", (20, 20)).save(image)
+        return RenderResult([str(image)], []), ""
+
+    bot.renderer = SimpleNamespace(render=render)
+    started, finish = threading.Event(), threading.Event()
+    publish = store.publish
+
+    def delayed_publish(*args):
+        started.set()
+        assert finish.wait(5)
+        return publish(*args)
+
+    monkeypatch.setattr(store, "publish", delayed_publish)
+
+    async def consume():
+        return [item async for item in bot.build_menu(FakeEvent())]
+
+    async def run():
+        job = asyncio.create_task(consume())
+        assert await asyncio.to_thread(started.wait, 5)
+        job.cancel()
+        finish.set()
+        with pytest.raises(asyncio.CancelledError):
+            await job
+        assert all(path.exists() for path in store.read_published()[1])
+        assert all(path.exists() for path in store.read_published(admin=True)[1])
+
+    asyncio.run(run())
+
+
 class FakeEvent:
     def is_admin(self):
         return False
@@ -364,6 +456,11 @@ def test_build_command_with_real_typst_and_worker_process(tmp_path, hide_all):
     bot.font_manager = FontManager(bot.font_dirs)
     bot.font_manager.scan_fonts()
     bot.layout = TypstLayout(bot.plugin_config)
+    from astrbot_plugin_custom_help.core.renderer import TypstRenderer
+
+    bot.renderer = TypstRenderer(
+        tmp_path, bot.template_path, bot.font_dirs, bot.plugin_config
+    )
     bot.context = SimpleNamespace(get_config=lambda: {"wake_prefix": ["/"]})
     kv = {}
 
@@ -391,15 +488,8 @@ def test_build_command_with_real_typst_and_worker_process(tmp_path, hide_all):
         _, admin_images, _ = bot.menu_store.read_published(admin=True)
         assert admin_images and set(admin_images).isdisjoint(images)
         assert all(Image.open(p).width > 100 for p in admin_images)
-        import json
-
-        admin_layout = json.loads(
-            (admin_images[0].parent / "cache_menu_command.json").read_text(
-                encoding="utf-8"
-            )
-        )
-        assert admin_layout["admin_view"]
-        assert admin_layout["ordered_cards"][0]["nodes"][1]["hidden"]
+        assert not list(admin_images[0].parent.glob("*.json"))
+        assert not list(admin_images[0].parent.glob("*.png"))
         assert list((root / "templates").glob(".help_typst_*.json")) == []
         # Changing the editable source only takes effect on the next successful build.
         bot.menu_store.source.write_text("broken JSON", encoding="utf-8")
@@ -429,11 +519,15 @@ def test_admin_render_failure_keeps_both_old_variants(tmp_path, monkeypatch):
     bot.font_dirs = []
     bot.font_manager = SimpleNamespace(get_render_font_list=lambda _: [])
     bot.layout = TypstLayout(bot.plugin_config)
+    bot.renderer = TypstRenderer(
+        tmp_path, bot.template_path, bot.font_dirs, bot.plugin_config
+    )
 
-    async def fail_admin(renderer, pipeline, mode):
-        if renderer.data_dir.name == "admin":
+    async def fail_admin(renderer, pipeline, mode, *, output_dir):
+        if output_dir.name == "admin":
             return None, "test admin compile failure"
-        image = renderer.data_dir / "public.webp"
+        output_dir.mkdir(parents=True)
+        image = output_dir / "public.webp"
         Image.new("RGB", (30, 30)).save(image)
         return RenderResult([str(image)], []), ""
 
@@ -482,7 +576,7 @@ def test_dual_publication_routes_by_admin_and_preserves_old_on_failure(tmp_path)
         generation, [str(public_image)], document(), ["/"], [str(admin_image)]
     )
     before = store.manifest.read_bytes()
-    with pytest.raises(ValueError, match="管理员"):
+    with pytest.raises(ValueError):
         store.publish(
             store.new_generation(),
             [str(public_image)],

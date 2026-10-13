@@ -1,13 +1,7 @@
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
-
-
-PLUGIN_ROOT = Path(__file__).resolve().parents[1]
-if str(PLUGIN_ROOT.parent) not in sys.path:
-    sys.path.insert(0, str(PLUGIN_ROOT.parent))
 
 from astrbot_plugin_custom_help.core import worker
 
@@ -46,6 +40,8 @@ def test_render_stages_json_as_a_file_and_cleans_it(monkeypatch, tmp_path):
     assert result == ["ok.webp"]
     assert "json_string" not in observed["inputs"]
     assert not observed["path"].exists()
+    assert observed["path"].parent != template.parent
+    assert not list(tmp_path.glob(".render_*"))
 
 
 def test_staged_json_is_cleaned_when_writing_fails(monkeypatch, tmp_path):

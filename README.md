@@ -1,123 +1,152 @@
 # AstrBot Custom Help | 自定义帮助菜单
 
-## 手动发布菜单
-
-本分支已改为固定菜单：`/helps` 只发送管理员手动生成的图片，关键词搜索只读取已发布的可见菜单并返回文本。
-
-1. 管理员执行 `/typst export`，完整导出注册的命令，包括黑名单、系统和管理员命令。
-2. 编辑插件数据目录中的 `menu.json`，通过插件及节点的 `visible` 控制展示。
-3. 执行 `/typst build` 生成并发布图片；`/typst status` 查看状态。
-
-重复导出保留已有编辑及顺序，新发现的功能默认隐藏。生成失败继续使用旧图；修改源文件、插件重载及服务重启均不会自动生成。
-
-详见 [手动菜单说明](MANUAL_MENU.md)，以及 [菜单 JSON 示例](menu.example.json)。下方预览及历史介绍来自原插件；图片搜索已改为文本搜索，事件和过滤器调试命令仅限管理员。
-
-`/typst build` 同时生成普通版与管理员完整版；`/helps` 自动按 AstrBot 管理员身份选择图片。管理员版以浅灰色显示隐藏命令，关键词搜索也包含隐藏内容；普通用户只能查看公开内容。
-
-## 自动发布 Release
-
-推送 `v*` tag 后，GitHub Actions 自动测试 tag 中的代码，校验 tag 与 `metadata.yaml` 的版本一致，并创建 Release、上传 `astrbot_plugin_custom_help-v版本号.zip` 安装包。
-
-说明优先读取 `.github/release-notes/<tag>.md`；没有对应文件时使用 GitHub 自动生成的说明。预发布 tag（例如 `v0.3.0-beta.1`）会标记为 Pre-release。重复运行保留已有 Release 文案，并更新安装包。
-
-也可在 Actions → Publish Release → Run workflow 中输入已有 tag 手动发布，适用于 workflow 添加前创建的 tag。安装包始终来自指定 tag；本地数据、测试文件和工作流不打入安装包。无需本机安装 `gh`，无需额外配置发布密钥。
-
 <div align="center">
 
-[![AstrBot](https://img.shields.io/badge/AstrBot-Plugin-purple?style=flat-square)](https://github.com/Soulter/AstrBot)
-[![Python](https://img.shields.io/badge/Python-3.10+-blue?style=flat-square)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](./LICENSE)
-[![Version](https://img.shields.io/badge/Version-0.2.0-orange?style=flat-square)]()
+[![AstrBot](https://img.shields.io/badge/AstrBot-Plugin-purple?style=flat-square)](https://github.com/AstrBotDevs/AstrBot)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=flat-square)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-AGPL_v3-green?style=flat-square)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/allenx555/astrbot_plugin_custom_help?style=flat-square)](https://github.com/allenx555/astrbot_plugin_custom_help/releases)
+[![Publish Release](https://github.com/allenx555/astrbot_plugin_custom_help/actions/workflows/release.yml/badge.svg)](https://github.com/allenx555/astrbot_plugin_custom_help/actions/workflows/release.yml)
 
-** 以优雅的方式组织你的插件菜单 **
-<br>
-*轻量  丰富  更多🗃*
+**编辑一次，手动发布，自定义帮助菜单。**
 
 </div>
 
----
+基于 Typst 的固定帮助菜单。管理员编辑 JSON、手动构建图片；用户查看帮助时只读取已发布文件，不查询实时命令注册表，也不重新渲染。
 
-## 📖 简介
-* 基于 tinkerbellqwq/astrbot_plugin_help 进行重度开发的插件菜单，实现缓存功能
-* 把插件菜单、事件钩子、函数工具、过滤器列表渲染成友好界面，智能组织节点和分组，并附上丰富的元信息。不只是面向 bot 用户的说明，也是一份调试辅助工具。
-* 针对插件名、指令名、描述内容的泛用搜索工具，附关键词高亮【用法： helps/events/filters <关键词>】
-* 基于 typst 渲染实现，轻量、灵活、高效，你可以使用 typst 语法修改、构建属于自己的渲染模板（WIP）
-* 支持自定义字体 .ttf .otf .woff2<br>
-1.放入 插件目录/resources/fonts 或[自定义字体目录](#-常见问题)<br>
-2.重载方式三选一(更新 optional scheme)<br>
-2a.在 AstrBot 面板中重载插件<br>
-2b.重启 AstrBot<br>
-2c.使用指令 typst font<br>
-3.新字体将会出现在配置面板供 勾选 & 排序 (不可用的字体会被自动剔除)
+## 功能
 
-<br>进度：基本功能 √
+- 完整导出命令、别名、指令组及子命令，包含隐藏、系统和管理员功能。
+- 在 JSON 中编辑分类名称、命令说明、显示开关和排列顺序，也可补充自定义功能说明。
+- 一次构建普通版和管理员完整版，管理员可以看到用浅灰色区分的隐藏内容。
+- 按关键词搜索已发布菜单的分类、命令、描述及别名；管理员还可使用实时事件和过滤器诊断。
+- 自定义字体、配色和三列卡片布局；可编辑 `templates/base.typ` 修改 Typst 模板。
 
-## 🖼️ 功能预览
+## 功能预览
 
-| `插件菜单` | `事件监听器` |
+下图来自仓库中的真实 JSON 构建测试，展示当前普通版和管理员版；标题、版本及功能名称取自测试输入，不代表安装环境中的实时注册信息。
+
+| 普通版 | 管理员完整版 |
 | :---: | :---: |
-| <img src="./preview/helps.jpg" width="400"> | <img src="./preview/events.jpg" width="400"> |
+| <img src="tests/fixtures/menu_baselines/public.webp" width="440" alt="普通用户帮助菜单"> | <img src="tests/fixtures/menu_baselines/admin.webp" width="440" alt="管理员完整帮助菜单，隐藏功能使用浅灰色"> |
 
+## 使用
 
-| `过滤器` | `搜索` |
-| :---: | :---: |
-| <img src="./preview/filters.jpg" width="400"> | <img src="./preview/search.jpg" width="400"> |
+1. 管理员执行 `/typst export`，导出全部注册命令，包括隐藏、系统和管理员命令。
+2. 编辑插件数据目录中的 `menu.json`，用分类和命令的 `visible` 控制展示。
+3. 执行 `/typst build`，同时生成普通版和管理员完整版。
+4. `/helps` 自动按 AstrBot 管理员身份发送对应版本；`/helps 关键词` 搜索已发布内容。
 
-## 🧱 依赖
-AstrBot>=4.10.4<br>
-typst>=0.14.7<br>
-pydantic
+`/` 以 AstrBot 实际配置的唤醒前缀为准。导出命令会返回文件路径，通常为 `data/plugin_data/astrbot_plugin_custom_help/menu.json`。
 
-## 🤝 感谢 PR
-Zhalslar(饰乐)  https://github.com/Zhalslar
+管理员完整版以浅灰色显示隐藏命令，隐藏分类及指令组的子命令也会标灰。普通用户只查看和搜索公开内容；`available: false` 的停用或失效项两版都不显示。`/help` 保留 AstrBot 内置功能。
 
-## ✔ 计划清单
-* 配置-自定义项目
-* 配置-背景 working...
-* 配置-模板 working...
-* ~~功能-黑名单~~
-* 指令-黑名单管理
-* 正式的说明文档
+重复导出保留已有编辑和顺序，新发现的功能默认隐藏。两版全部生成成功后一起发布，生成失败保留旧图。编辑 JSON、更改配置、重载插件均不会自动更新菜单；需再次执行 `/typst build`。
 
-## ❓ 常见问题
+详见 [手动菜单说明](MANUAL_MENU.md) 与 [JSON 示例](menu.example.json)。
 
-### Typst 字体优先级
-文档显式指定 > 项目字体目录 > 系统字体库
-* 文档显式指定：通过 #set text(font: "font-family-name") 直接指定，优先级最高
-* 项目字体目录：即本插件的根目录下的 ./resources/fonts <br>
-~~后面会考虑增加额外的目录支持~~已完成，缺省值为 `.../data/plugin_data/astrbot_plugin_custom_help/fonts` 🚨 docker 用户记得确保自定义字体目录已被挂载
-* 系统字体库：获取系统默认字体目录 ( Windows、macOS 应该有官方支持，Linux 未测试支持度如何；🚨 docker 环境可能需要安装字体依赖）
+## 排列与设置
 
-## 🌳 目录结构（初步预期）
+命令菜单按 JSON 顺序轮流向左、中、右三列追加完整卡片，跳过放不下的长列；三列都达到阈值时继续放入最短列。各列独立向下排列，卡片不会按布局拆分。
+
+`rendering.column_height_pt` 控制长列跳过阈值，默认 `600pt`。字体、主题配色、PPI 及渲染超时在插件配置中设置。`rendering.max_concurrent_tasks` 限制本插件所有构建及诊断任务的同时编译数量。
+
+字体默认从内置目录及 `data/plugin_data/astrbot_plugin_custom_help/fonts` 扫描，也可设置 `custom_font_path`。使用插件管理页面重载或 `/typst font` 更新可用字体。字体暂时不可用时保留用户配置，不自动删除选择。
+
+### 添加字体
+
+1. 将字体文件放入上述数据目录，或在 `custom_font_path` 中填写自定义字体目录的绝对路径。推荐使用 `.ttf` 或 `.otf`，其他格式是否可用取决于 Typst 的字体扫描支持。
+2. 在 AstrBot 插件管理页面重载本插件，或执行 `/typst font`。
+3. 在插件配置面板中选择字体并调整 `font_order`，然后执行 `/typst build`。
+
+渲染按配置中的字体顺序选择可用字体，并追加 `Sarasa Gothic SC` 和 `Noto Color Emoji` 作为回退。字体文件名称与配置中的字体家族名称可能不同，以扫描结果为准。内置目录提供中文与 Emoji 字体；系统字体也可能参与扫描，但 Docker 中的宿主机字体不会自动出现在容器里。
+
+Docker/NAS 用户应确保数据目录和自定义字体目录已挂载到容器，并填写容器内可访问的路径。
+
+## 管理与诊断
+
+| 命令 | 功能 | 权限 |
+| --- | --- | --- |
+| `/typst export` | 完整导出，保留编辑并备份旧源文件 | 管理员 |
+| `/typst build` | 手动构建并发布两版固定菜单 | 管理员 |
+| `/typst status` | 查看源文件和当前发布状态 | 管理员 |
+| `/typst font` | 扫描字体并重载本插件 | 管理员 |
+| `/helps [关键词]` | 固定图片或已发布菜单文本搜索 | 所有用户 |
+| `/events [关键词]` | 实时事件监听及工具诊断 | 管理员 |
+| `/filters [关键词]` | 实时过滤器诊断 | 管理员 |
+
+事件与过滤器视图保留原版实时诊断渲染；它们使用独立临时目录，不影响固定菜单。编译在独立进程中执行，超时或取消会终止该进程，插件卸载会收尾任务。
+
+每次构建保留独立发布目录。失败构建会清理未发布文件；成功构建后清理超过七天的旧目录，同时保留当前菜单及最近三代目录。不会清理 `menu.json`、备份或自定义字体。
+
+## 安装与更新
+
+从 [Releases](https://github.com/allenx555/astrbot_plugin_custom_help/releases) 下载 `astrbot_plugin_custom_help-v版本号.zip`，通过 AstrBot 插件管理页面安装或更新并重载本插件。已有源文件及旧菜单兼容；升级后执行 `/typst build` 生成新版图片。
+
+依赖：AstrBot（发布测试使用 `4.14.6`）、Python 3.10+、`typst>=0.14.7`、Pydantic 2、Pillow。不同 AstrBot 版本的注册表接口仍需实际验证。
+
+## 常见问题
+
+### 修改 JSON 或字体后，图片为什么没有变化？
+
+菜单只在 `/typst build` 时更新。保存文件后重新构建；如修改了插件配置或添加了字体，先重载本插件，再构建。
+
+### 隐藏命令会禁止用户调用吗？
+
+不会。`visible` 只控制帮助菜单与菜单搜索；实际命令是否可用由插件和 AstrBot 的权限设置决定。隐藏父分类或指令组时，其子项在普通版中也隐藏。管理员版可查看这些隐藏项，但 `available: false` 的失效项两版都不展示。
+
+### 为什么导出后仍有功能缺失？
+
+导出只能读取已注册的信息。已卸载、加载失败的插件，以及在单个 Handler 内自行解析的子命令，可能无法完整识别。可在 JSON 中用唯一的 `custom:` 前缀 ID 手工补充，详见 [手动菜单说明](MANUAL_MENU.md)。
+
+### 第一次使用没有图片，或构建失败怎么办？
+
+首次使用需依次 export、编辑、build。构建失败时先看命令返回的错误和插件日志，检查 JSON、字体路径及依赖；已发布的旧菜单仍可使用。`/typst status` 可查看源文件路径和发布状态。
+
+## 目录结构与开发测试
+
+```text
+astrbot_plugin_custom_help/
+├── main.py                  # 插件入口、命令与菜单发布
+├── metadata.yaml            # 插件身份及版本
+├── _conf_schema.json        # 插件配置面板
+├── core/
+│   ├── analyzer.py          # 注册表导出与诊断数据
+│   ├── menu.py              # JSON 合并、校验与发布存储
+│   ├── renderer.py          # 并发、超时和任务生命周期
+│   └── worker.py            # 子进程编译
+├── domain/                  # 配置、常量与数据模型
+├── utils/                   # 字体、图片处理与视图数据
+├── templates/base.typ       # Typst 渲染模板
+├── resources/fonts/         # 内置中文与 Emoji 字体
+├── menu.example.json        # 可编辑菜单示例
+├── tests/                   # 行为、构建和发布打包测试
+│   └── fixtures/            # 真实 JSON 与两版图片基准
+└── .github/                 # 发布工作流、打包脚本与发布说明
 ```
-astrbot_plugin_typst_menu/
-├── main.py                # [入口] AstrBot 插件主文件，注册指令和事件，转发给 core
-├── domain/                # [数据定义层] (最底层，无依赖)
-│    ├── constants.py          # 存储 “魔术数字” 统一于此维护调试
-│    ├── config.py             # 配置结构
-│    └── schemas.py            # Pydantic Models & TypedDicts
-├── utils/                 # [通用工具层] (各类公开可复用的静态方法)
-│    ├── hash.py               # hash
-│    ├── font.py               # 字体扫描 & 管理
-│    ├── image.py              # 图片处理
-│    └── views.py              # [视图层] 处理通过指令组管理和调试插件时展示给用户的格式化文本
-├── core/                  # [核心业务层] (纯 Python 逻辑)
-│    ├── analyzer.py           # 获取、组织数据
-│    ├── renderer.py           # 渲染调度
-│    └── worker.py             # 进程调用（即用即销）
-├── templates/             # Typst 模板文件
-│    └── base.typ              # 基础库文件 (类似 CSS Reset)
-└── resources/             # 静态资源
-     ├── fonts/                # 内置开源中文字体
-     └── images/               # 默认背景图、图标 (未完成)
 
+安装 `requirements.txt` 中的依赖，并准备 AstrBot、pytest、pypdf。日常修改运行相关测试；推送或发布前运行完整测试：
+
+```shell
+python -m pytest tests -q
 ```
 
----
+真实菜单构建测试可单独运行：
 
-<div align="center">
-🔔 Merry Christmas~<br>
-Made with 😊 by LilDawn
-</div>
+```shell
+python -m pytest tests/test_menu_fixture_build.py -q
+```
 
-本项目基于 [bylkuse/astrbot_plugin_help_typst](https://github.com/bylkuse/astrbot_plugin_help_typst)，并保留 casama233 分支的 JSON 暂存修复。
+该测试实际生成两版 WebP，检查显示范围、隐藏文字颜色、列位置、图片选择和图片基准。基准更新需人工检查，操作见 [图片基准说明](tests/fixtures/menu_baselines/README.md)。本地测试不能代替 NAS 插件加载和实际 QQ 发图验证。
+
+## 自动发布
+
+提交前更新 `metadata.yaml` 的版本，并推送对应 `v*` tag。GitHub Actions 会测试 tag 中的代码、校验版本、打包运行文件并发布 Release。
+
+说明优先读取 `.github/release-notes/<tag>.md`；没有文件时生成 GitHub 发布说明。含连字符的版本标记为预发布。重复运行保留已有文案并更新安装包。
+
+旧 tag 可在 Actions → Publish Release → Run workflow 中手动发布。无需本机安装 `gh` 或配置额外密钥。测试、工作流和本地运行数据不包含在安装包中。
+
+## 来源与许可
+
+基于 [bylkuse/astrbot_plugin_help_typst](https://github.com/bylkuse/astrbot_plugin_help_typst)，沿用 casama233 分支将 JSON 作为文件传入 Typst 的修复思路。许可见 [LICENSE](LICENSE)。

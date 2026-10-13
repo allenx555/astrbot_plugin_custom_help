@@ -1,7 +1,5 @@
-import ctypes
-import gc
-import platform
 import re
+import shutil
 import tempfile
 import traceback
 from dataclasses import dataclass
@@ -13,17 +11,12 @@ from ..domain import DefaultCFG
 from ..utils import process_image_to_webp
 
 
-def force_memory_release():
-    # Python 层
-    gc.collect()
-
-    # glibc 层
-    if platform.system() == "Linux":
-        try:
-            libc = ctypes.CDLL("libc.so.6")
-            libc.malloc_trim(0)
-        except Exception:
-            pass
+def render_to_pipe(connection, task):
+    """Child process entry point; process exit releases compiler memory."""
+    try:
+        connection.send(execute_render_task(task))
+    finally:
+        connection.close()
 
 
 @dataclass
@@ -45,9 +38,16 @@ class RenderTask:
 def execute_render_task(task: RenderTask) -> list[str]:
     """渲染子进程"""
     staged_json_path: Path | None = None
+    workspace = None
     try:
         # 1. 准备参数
-        template_dir = Path(task.template_path).parent
+        workspace = tempfile.TemporaryDirectory(prefix=".render_", dir=task.output_dir)
+        template_dir = Path(workspace.name) / "templates"
+        shutil.copytree(
+            Path(task.template_path).parent,
+            template_dir,
+            ignore=shutil.ignore_patterns(".help_typst_*.json", ".render_*"),
+        )
         with tempfile.NamedTemporaryFile(
             mode="w",
             encoding="utf-8",
@@ -68,7 +68,7 @@ def execute_render_task(task: RenderTask) -> list[str]:
 
         # 2. 执行 Typst 编译
         typst.compile(
-            task.template_path,
+            str(template_dir / Path(task.template_path).name),
             output=task.output_png_path,
             font_paths=task.font_paths,
             format="png",
@@ -99,5 +99,5 @@ def execute_render_task(task: RenderTask) -> list[str]:
             except OSError:
                 pass
 
-        # 4. 强制内存回收
-        force_memory_release()
+        if workspace is not None:
+            workspace.cleanup()

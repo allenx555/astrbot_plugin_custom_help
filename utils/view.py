@@ -192,11 +192,7 @@ class TypstLayout:
 
         # 辅助函数：获取节点列表
         def get_nodes(p: PluginMetadata) -> list[RenderNode]:
-            if hasattr(p, "nodes") and p.nodes:
-                return p.nodes
-            if hasattr(p, "command_nodes") and p.command_nodes:
-                return p.command_nodes
-            return []
+            return p.nodes
 
         # 1. 预分类
         for p in plugins:
@@ -206,7 +202,7 @@ class TypstLayout:
             is_tool = len(nodes) > 0 and (
                 nodes[0].tag == "tool" or nodes[0].tag == "mcp"
             )
-            if is_tool and mode != "command":
+            if is_tool:
                 single_node_plugins.append(p.model_dump())
                 continue
 

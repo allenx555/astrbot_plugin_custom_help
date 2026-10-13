@@ -1,6 +1,5 @@
-from .hash import calculate_hash
 from .font import FontManager
-from .image import verify_image_header, process_image_to_webp
+from .image import process_image_to_webp, verify_image_header
 from .view import HelpHint, MsgRecall, TypstLayout
 
 __all__ = [
@@ -8,7 +7,6 @@ __all__ = [
     "HelpHint",
     "MsgRecall",
     "TypstLayout",
-    "calculate_hash",
     "verify_image_header",
     "process_image_to_webp",
 ]

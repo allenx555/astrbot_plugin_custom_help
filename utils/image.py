@@ -23,6 +23,8 @@ def process_image_to_webp(
 ) -> list[str]:
     """核心图片处理逻辑"""
     images = []
+    if not 1 <= split_height <= webp_limit <= 16383:
+        raise ValueError("切片高度及 WebP 限制必须在 1..16383 且切片高度不超过限制")
     src_path_obj = Path(source_path)
     out_dir_obj = Path(output_dir)
 
@@ -30,6 +32,8 @@ def process_image_to_webp(
         return []
     try:
         with Image.open(src_path_obj) as img:
+            if img.width > webp_limit:
+                raise ValueError("图片宽度超过 WebP 限制，请降低 PPI")
             if img.height <= webp_limit:
                 # 不切分
                 webp_path = out_dir_obj / f"{stem_name}.webp"

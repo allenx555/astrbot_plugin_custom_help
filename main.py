@@ -1,4 +1,5 @@
 import asyncio
+import shutil
 from pathlib import Path
 
 from astrbot.api import AstrBotConfig, logger
@@ -53,7 +54,6 @@ class HelpTypst(Star):
 
         # 4. 渲染器
         self.renderer = TypstRenderer(
-            star=self,
             data_dir=self.data_dir,
             template_path=self.template_path,
             font_dirs=self.font_dirs,
@@ -68,6 +68,7 @@ class HelpTypst(Star):
         self.prefixes: list[str] = []
         self.menu_store = MenuStore(self.data_dir)
         self._menu_lock = asyncio.Lock()
+        self._background_tasks = set()
 
     async def initialize(self):
         """异步初始化"""
@@ -83,25 +84,29 @@ class HelpTypst(Star):
             # 2. 更新 Schema
             self.font_manager.update_json_schema(self.schema_path)
 
-            # 3. 清洗 Config
-            self.font_manager.prune_invalid_config_items(self.config)
-
         except Exception as e:
             logger.warning(f"[HelpTypst] 资源重载失败: {e}")
 
     async def terminate(self):
         """周期hook"""
+        await self.renderer.close()
+        tasks = [
+            task
+            for task in self._background_tasks
+            if task is not asyncio.current_task()
+        ]
+        for task in tasks:
+            task.cancel()
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
         # 1. 清理临时文件
         await self._perform_cleanup()
 
-        # 2. [Dirty Hook] 刷新 Schema
-        # 用需重载维护的 Optional: 因为 勾选 + 排序 是 字体优先级 操作逻辑上的最佳实践
-        # 时序: 配置页面构建于插件实例化之前, 这是自动维护的最佳时点
-        # 阻塞: 符合预期，这是确保 放入/删除字体 → 重载即可见 的必要代价
-        try:
-            self._refresh_resources()
-        except Exception:
-            pass
+    def _start_background(self, coroutine):
+        task = asyncio.create_task(coroutine)
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.discard)
+        return task
 
     async def _perform_cleanup(self):
         try:
@@ -115,7 +120,10 @@ class HelpTypst(Star):
             for f in temp_files:
                 try:
                     if f.exists():  # 双重检查
-                        f.unlink()
+                        if f.is_dir():
+                            await asyncio.to_thread(shutil.rmtree, f)
+                        else:
+                            await asyncio.to_thread(f.unlink)
                 except OSError:
                     pass
 
@@ -144,7 +152,7 @@ class HelpTypst(Star):
                 yield event.plain_result(
                     f"✅ 扫描完成 ({count} fonts)。正在重载以刷新面板..."
                 )
-                asyncio.create_task(self._safe_reload(pm, plugin_name))  # 异步延迟重载
+                self._start_background(self._safe_reload(pm, plugin_name))
             else:
                 yield event.plain_result(f"✅ 扫描完成 ({count} fonts)。请手动重载插件")
         except Exception as e:
@@ -190,6 +198,8 @@ class HelpTypst(Star):
     @filter.permission_type(filter.PermissionType.ADMIN)
     async def build_menu(self, event: AstrMessageEvent):
         """从 menu.json 手动生成并发布固定菜单。"""
+        generation = None
+        committed = False
         try:
             async with self._menu_lock:
                 document = await asyncio.to_thread(
@@ -208,7 +218,6 @@ class HelpTypst(Star):
 
                 async def render_variant(items, name, title):
                     directory = generation / name
-                    await asyncio.to_thread(directory.mkdir)
 
                     def pipeline(path):
                         self.layout.dump_layout_json(
@@ -223,14 +232,9 @@ class HelpTypst(Star):
                         # An entirely hidden menu still has a public title/legend.
                         return max(1, len(items))
 
-                    renderer = TypstRenderer(
-                        self,
-                        directory,
-                        self.template_path,
-                        self.font_dirs,
-                        self.plugin_config,
+                    result, error = await self.renderer.render(
+                        pipeline, "command", output_dir=directory
                     )
-                    result, error = await renderer.render(pipeline, "command")
                     if not result:
                         raise RuntimeError(f"{name} 菜单生成失败：{error}")
                     return result
@@ -239,14 +243,29 @@ class HelpTypst(Star):
                 admin_result = await render_variant(
                     admin_plugins, "admin", f"{document.title}（管理员完整版）"
                 )
-                published = await asyncio.to_thread(
-                    self.menu_store.publish,
-                    generation,
-                    result.images,
-                    document,
-                    prefixes,
-                    admin_result.images,
+                publication = asyncio.create_task(
+                    asyncio.to_thread(
+                        self.menu_store.publish,
+                        generation,
+                        result.images,
+                        document,
+                        prefixes,
+                        admin_result.images,
+                    )
                 )
+                try:
+                    published = await asyncio.shield(publication)
+                    committed = True
+                except asyncio.CancelledError:
+                    # Atomic publication cannot be interrupted halfway through
+                    # by reload; finish before deciding whether to discard files.
+                    await publication
+                    committed = True
+                    raise
+                try:
+                    await asyncio.to_thread(self.menu_store.collect_garbage)
+                except Exception:
+                    logger.warning("[HelpTypst] 旧菜单目录清理失败", exc_info=True)
             yield event.plain_result(
                 f"菜单已生成：{len(result.images)} 张图片，{len(plugins)} 个可见分类。\n"
                 f"管理员完整版：{len(admin_result.images)} 张图片，{len(admin_plugins)} 个分类（浅色为隐藏功能）。\n"
@@ -259,6 +278,14 @@ class HelpTypst(Star):
         except Exception as e:
             logger.error(f"[HelpTypst] 手动生成失败: {e}", exc_info=True)
             yield event.plain_result(f"菜单生成失败，旧的已发布菜单保持可用：{e}")
+        finally:
+            if generation is not None and not committed:
+                try:
+                    await asyncio.to_thread(
+                        self.menu_store.discard_generation, generation
+                    )
+                except Exception:
+                    logger.warning("[HelpTypst] 未发布目录清理失败", exc_info=True)
 
     @typst.command("status")
     @filter.permission_type(filter.PermissionType.ADMIN)
@@ -287,6 +314,13 @@ class HelpTypst(Star):
         """通用请求处理逻辑"""
         wait_msg_id = None
 
+        try:
+            plugins = analyzer.get_plugins(query)
+        except Exception:
+            logger.warning("[HelpTypst] 诊断数据读取失败", exc_info=True)
+            yield event.plain_result("诊断数据读取失败，请检查插件日志。")
+            return
+
         if self.plugin_config.enable_waiting_message:
             # 1. 发送提示
             hint_text = (
@@ -299,7 +333,6 @@ class HelpTypst(Star):
         def data_pipeline(save_path: Path) -> int:
             """数据流转"""
             # 数据层：获取对象
-            plugins = analyzer.get_plugins(query)
             if not plugins:
                 return 0
 
@@ -322,11 +355,11 @@ class HelpTypst(Star):
             return len(plugins)
 
         # 2. 执行渲染
-        result, error = await self.renderer.render(data_pipeline, mode, query)
-
-        # 3. 结束撤回提示
-        if wait_msg_id:
-            await self.msg.recall(event, wait_msg_id)
+        try:
+            result, error = await self.renderer.render(data_pipeline, mode, query)
+        finally:
+            if wait_msg_id:
+                await self.msg.recall(event, wait_msg_id)
 
         # 4. 处理结果
         if result:
@@ -337,7 +370,7 @@ class HelpTypst(Star):
             finally:
                 # 后台任务清理文件列表
                 if result.temp_files:
-                    asyncio.create_task(self._cleanup_task(result.temp_files))
+                    self._start_background(self._cleanup_task(result.temp_files))
         else:
             # 错误处理
             if error == "empty":
@@ -351,7 +384,10 @@ class HelpTypst(Star):
         for p in files:
             try:
                 if p.exists():
-                    p.unlink()
+                    if p.is_dir():
+                        await asyncio.to_thread(shutil.rmtree, p)
+                    else:
+                        await asyncio.to_thread(p.unlink)
             except Exception as e:
                 logger.warning(f"[HelpTypst] 临时文件清理失败 {p}: {e}")
 

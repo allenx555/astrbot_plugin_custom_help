@@ -2,7 +2,10 @@
 
 import json
 import os
+import re
+import shutil
 import tempfile
+import time
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -222,7 +225,47 @@ class MenuStore:
         directory.mkdir(parents=True)
         return directory
 
+    def _generation_path(self, path):
+        path = Path(path)
+        if path.is_symlink():
+            raise ValueError("发布目录不能是符号链接")
+        path = path.resolve()
+        if path.parent != self.root.resolve() or not re.fullmatch(
+            r"[0-9a-f]{32}", path.name
+        ):
+            raise ValueError("无效的发布目录")
+        return path
+
+    def discard_generation(self, generation):
+        generation = self._generation_path(generation)
+        if self.manifest.exists():
+            current = json.loads(self.manifest.read_text(encoding="utf-8"))
+            if Path(current["menu"]).parts[0] == generation.name:
+                return
+        shutil.rmtree(generation, ignore_errors=True)
+
+    def collect_garbage(self, retain=3, min_age_days=7):
+        """Keep current/recent generations; allow in-flight sends ample time."""
+        current = json.loads(self.manifest.read_text(encoding="utf-8"))
+        candidates = [
+            p
+            for p in self.root.iterdir()
+            if p.is_dir()
+            and not p.is_symlink()
+            and re.fullmatch(r"[0-9a-f]{32}", p.name)
+        ]
+        candidates.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+        cutoff = time.time() - min_age_days * 86400
+        protected = {p.name for p in candidates[:retain]}
+        protected.add(Path(current["menu"]).parts[0])
+        for generation in candidates:
+            if generation.name not in protected and generation.stat().st_mtime < cutoff:
+                self.discard_generation(generation)
+
     def publish(self, generation, images, document, prefixes, admin_images=None):
+        generation = self._generation_path(generation)
+        for image in [*images, *(admin_images or [])]:
+            Path(image).resolve().relative_to(generation)
         if not images or any(not verify_image_header(Path(p)) for p in images):
             raise ValueError("生成的菜单图片缺失或损坏")
         relative = [
@@ -238,11 +281,12 @@ class MenuStore:
                 str(Path(p).resolve().relative_to(self.root.resolve()))
                 for p in admin_images
             ]
-        atomic_json(generation / "menu.json", document.model_dump())
+        snapshot = generation / f"menu_{uuid.uuid4().hex}.json"
+        atomic_json(snapshot, document.model_dump())
         payload = {
             "generated_at": datetime.now().astimezone().isoformat(timespec="seconds"),
             "images": relative,
-            "menu": str((generation / "menu.json").relative_to(self.root)),
+            "menu": str(snapshot.relative_to(self.root.resolve())),
             "prefixes": prefixes,
         }
         if admin_relative is not None:
@@ -267,6 +311,9 @@ class MenuStore:
         if not images or any(not verify_image_header(p) for p in images):
             raise ValueError("已发布菜单图片缺失或损坏，请管理员重新生成")
         document = MenuDocument.read(resolve(payload["menu"]))
+        generation = self._generation_path(resolve(payload["menu"]).parent)
+        for image in images:
+            image.relative_to(generation)
         return payload, images, document
 
 

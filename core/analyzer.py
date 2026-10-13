@@ -72,7 +72,7 @@ class BaseAnalyzer:
 
         except Exception as e:
             logger.error(f"[HelpTypst] 分析失败: {e}", exc_info=True)
-            return []
+            raise
 
     def _is_match(self, name: str, display: str | None, desc: str, query: str) -> bool:
         """基础匹配检查"""
@@ -249,77 +249,6 @@ class CommandAnalyzer(BaseAnalyzer):
                 }
             )
         return inventory
-
-    def analyze_hierarchy(self) -> list[PluginMetadata]:
-        handlers_map = self._group_handlers_by_module()
-        results = []
-        all_stars = self.context.get_all_stars()
-
-        logger.info(
-            f"[HelpTypst] 开始分析指令。共扫描到 {len(all_stars)} 个已加载插件。"
-        )
-
-        for star_meta in all_stars:
-            if not star_meta.activated:
-                continue
-
-            info = self._get_safe_plugin_info(star_meta)
-            safe_name = info["name"]
-            raw_module = info["raw_module"]
-            plugin_name = safe_name
-
-            # 黑名单
-            if safe_name in self.cfg.ignored_plugins:
-                continue
-
-            # 模块路径
-            if not raw_module:
-                logger.debug(
-                    f"[HelpTypst] 插件 {safe_name} 缺失 module_path，无法关联指令，已跳过。"
-                )
-                continue
-
-            # --- Handler 关联 ---
-            handlers = handlers_map.get(raw_module, [])
-
-            # Fallback: 模糊匹配
-            if not handlers:
-                for k, v in handlers_map.items():
-                    if k.startswith(raw_module) or raw_module.startswith(k):
-                        handlers = v
-                        break
-
-            if not handlers:
-                # 防御性跳过 + 提供调试
-                logger.debug(
-                    f"[HelpTypst] 插件 {safe_name} ({raw_module}) 未注册任何指令 Handler。"
-                )
-                continue
-
-            # --- 构建指令树 ---
-            try:
-                nodes = self._build_plugin_command_tree(handlers)
-                if nodes:
-                    results.append(
-                        PluginMetadata(
-                            name=plugin_name,
-                            display_name=info["display_name"],
-                            version=info["version"],
-                            desc=info["desc"],
-                            nodes=nodes,
-                        )
-                    )
-                else:
-                    logger.debug(f"[HelpTypst] 插件 {safe_name} 指令树构建结果为空。")
-            except Exception as e:
-                logger.warning(f"[HelpTypst] 处理插件 {safe_name} 时发生异常: {e}")
-                continue
-
-        # 排序
-        results.sort(key=lambda x: (x.display_name is None, x.name))
-
-        logger.info(f"[HelpTypst] 指令分析完成。找到 {len(results)} 个有指令的插件。")
-        return results
 
     def _build_plugin_command_tree(
         self, handlers: list[StarHandlerMetadata], strict: bool = False
