@@ -5,6 +5,7 @@
 #let user_fonts      = data.at("fonts", default: ("Sarasa Gothic SC", "Noto Color Emoji"))
 #let query_regex_str = sys.inputs.at("query_regex", default: none)
 #let generated_time  = sys.inputs.at("timestamp", default: "Unknown Time")
+#let preserve_order  = data.at("mode", default: "command") == "command"
 // 颜色参数
 #let c_map           = data.at("colors", default: (:))
 #let get_color(key, default_hex) = {
@@ -366,28 +367,34 @@
 
         #v(6pt)
 
-        #let complex = node.children.filter(c => c.is_group or c.desc != "")
+        #if preserve_order {
+          for child in node.children {
+            render_node_standard(child, indent_level: indent_level + 1)
+          }
+        } else {
+        let complex = node.children.filter(c => c.is_group or c.desc != "")
 
-        #let simple = node.children.filter(c => 
+        let simple = node.children.filter(c =>
              not c.is_group 
              and c.desc == "" 
              and (c.tag == "normal" or c.tag == "admin")
         )
 
-        #let specials = node.children.filter(c => 
+        let specials = node.children.filter(c =>
              not c.is_group 
              and c.desc == "" 
              and not (c.tag == "normal" or c.tag == "admin")
         )
 
-        #for child in complex { render_node_standard(child, indent_level: indent_level + 1) }
-        #for child in specials { render_node_standard(child, indent_level: indent_level + 1) }
+        for child in complex { render_node_standard(child, indent_level: indent_level + 1) }
+        for child in specials { render_node_standard(child, indent_level: indent_level + 1) }
 
-        #if simple.len() > 0 {
+        if simple.len() > 0 {
            if (complex.len() + specials.len()) > 0 { v(4pt) }
            pad(left: 1em)[
              #grid(columns: (1fr, 1fr, 1fr), gutter: 5pt, ..simple.map(c => render_compact_block(c)))
            ]
+        }
         }
     ]
     if indent_level == 0 {
@@ -445,6 +452,8 @@
          gutter: 8pt,
          ..plugin.nodes.map(n => render_rich_block(n))
        )
+    } else if preserve_order {
+       for node in plugin.nodes { render_node_standard(node, indent_level: 0) }
     } else {
        let complex = plugin.nodes.filter(c => c.is_group or c.desc != "")
        let simple = plugin.nodes.filter(c => 
@@ -562,7 +571,42 @@
 }
 
 // --- Columns ---
-#grid(
+#if preserve_order {
+  layout(size => {
+    let gap = 15pt
+    let card_width = (size.width - 2 * gap) / 3
+    let limit = data.at("column_height_pt", default: 600) * 1pt
+    let bands = ()
+    let cols = ((), (), ())
+    let col = 0
+    let used = 0pt
+    for plugin in data.at("ordered_cards", default: ()) {
+      let card = plugin_card(plugin, mode: "standard")
+      let height = measure(card, width: card_width).height
+      let spacing = if cols.at(col).len() > 0 { gap } else { 0pt }
+      if cols.at(col).len() > 0 and used + spacing + height > limit {
+        col += 1
+        used = 0pt
+        spacing = 0pt
+        if col == 3 {
+          bands.push(cols)
+          cols = ((), (), ())
+          col = 0
+        }
+      }
+      cols.at(col).push(card)
+      used += spacing + height
+    }
+    if cols.any(column => column.len() > 0) { bands.push(cols) }
+    stack(spacing: gap, ..bands.map(columns => grid(
+      columns: (1fr, 1fr, 1fr), gutter: gap,
+      ..columns.map(cards => align(top)[
+        #stack(spacing: gap, ..cards)
+      ])
+    )))
+  })
+} else {
+grid(
   columns: (1fr, 1fr, 1fr), gutter: 15pt,
   ..data.columns.map(col_plugins => {
     align(top)[
@@ -570,6 +614,7 @@
     ]
   })
 )
+}
 
 // --- Singles ---
 #render_singles_section(data.singles)

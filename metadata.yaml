@@ -1,6 +1,6 @@
 name: astrbot_plugin_custom_help
 display_name: 自定义帮助菜单
 desc: 基于 Typst 的手动发布菜单，支持完整导出、JSON 自定义显示隐藏、固定图片及可见菜单文本搜索
-version: v0.2.0
+version: v0.2.1
 author: bylkuse
 repo: https://github.com/allenx555/astrbot_plugin_custom_help

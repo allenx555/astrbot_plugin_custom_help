@@ -26,6 +26,7 @@ class InternalCFG:
     # 会引起布局变动的配置项 → 缓存失效
     CACHE_SENSITIVE_CONFIGS: list[str] = [
         "giant_threshold", 
+        "column_height_pt",
         "split_height", 
         "ppi",
         "ignored_plugins",

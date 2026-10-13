@@ -7,7 +7,7 @@ from typing import Any
 from astrbot.api import logger
 from astrbot.api.event import AstrMessageEvent, MessageChain
 
-from ..domain import PluginMetadata, RenderNode, InternalCFG, TypstPluginConfig
+from ..domain import InternalCFG, PluginMetadata, RenderNode, TypstPluginConfig
 
 
 class HelpHint:
@@ -171,7 +171,21 @@ class TypstLayout:
         prefixes: list[str],
         font_list: list[str],
     ) -> dict[str, Any]:
-        """瀑布流分发逻辑"""
+        """命令菜单保持来源顺序，调试视图继续使用瀑布流。"""
+        if mode == "command":
+            return {
+                "title": title,
+                "mode": mode,
+                "prefixes": prefixes,
+                "fonts": font_list,
+                "plugin_count": len(plugins),
+                "ordered_cards": [plugin.model_dump() for plugin in plugins],
+                "column_height_pt": self.cfg.rendering.column_height_pt,
+                "giants": [],
+                "columns": [[], [], []],
+                "singles": [],
+            }
+
         giants = []
         complex_plugins = []
         single_node_plugins = []
@@ -184,22 +198,15 @@ class TypstLayout:
                 return p.command_nodes
             return []
 
-        extract_singles = mode == "command"
-
         # 1. 预分类
         for p in plugins:
             nodes = get_nodes(p)
 
-            # A: 工具调用 -> Singles
+            # 工具调用仅在调试视图单独展示；命令菜单统一使用插件卡片。
             is_tool = len(nodes) > 0 and (
                 nodes[0].tag == "tool" or nodes[0].tag == "mcp"
             )
-            if is_tool:
-                single_node_plugins.append(p.model_dump())
-                continue
-
-            # B: 单指令 -> Singles (Command 模式)
-            if extract_singles and len(nodes) == 1 and not nodes[0].is_group:
+            if is_tool and mode != "command":
                 single_node_plugins.append(p.model_dump())
                 continue
 

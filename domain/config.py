@@ -18,6 +18,7 @@ class RenderingConfig:
     webp_limit: int
     split_height: int
     ppi: float
+    column_height_pt: float = 600.0
 
 
 @dataclass
@@ -118,6 +119,7 @@ class TypstPluginConfig:
             webp_limit=raw_render.get("webp_limit", DefaultCFG.LIMIT_WEBP),
             split_height=raw_render.get("split_height", DefaultCFG.LIMIT_SIDE),
             ppi=float(raw_render.get("ppi", DefaultCFG.LIMIT_PPI)),
+            column_height_pt=max(100.0, float(raw_render.get("column_height_pt", 600.0))),
         )
 
         # Appearance
