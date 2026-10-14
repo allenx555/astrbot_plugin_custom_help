@@ -169,7 +169,7 @@ class TypstPluginConfig:
 
         default_preset = ThemePreset(
             name="default",
-            font_order=["Sarasa Gothic SC", "Noto Color Emoji"],
+            font_order=["Sarasa Gothic SC", "Custom Help Emoji"],
             colors={},
         )
         presets_dict["default"] = default_preset  # 兜底：默认预设

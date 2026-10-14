@@ -2,7 +2,7 @@
 
 // --- 参数传入 ---
 #let data            = json(sys.inputs.json_path)
-#let user_fonts      = data.at("fonts", default: ("Sarasa Gothic SC", "Noto Color Emoji"))
+#let user_fonts      = data.at("fonts", default: ("Sarasa Gothic SC", "Custom Help Emoji"))
 #let query_regex_str = sys.inputs.at("query_regex", default: none)
 #let generated_time  = sys.inputs.at("timestamp", default: "Unknown Time")
 #let preserve_order  = data.at("mode", default: "command") == "command"

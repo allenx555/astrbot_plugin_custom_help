@@ -61,7 +61,9 @@
 2. 在 AstrBot 插件管理页面重载本插件，或执行 `/typst font`。
 3. 在插件配置面板中选择字体并调整 `font_order`，然后执行 `/typst build`。
 
-渲染按配置中的字体顺序选择可用字体，并追加 `Sarasa Gothic SC` 和 `Noto Color Emoji` 作为回退。字体文件名称与配置中的字体家族名称可能不同，以扫描结果为准。内置目录提供中文与 Emoji 字体；系统字体也可能参与扫描，但 Docker 中的宿主机字体不会自动出现在容器里。
+渲染按配置中的字体顺序选择可用字体，并追加 `Sarasa Gothic SC` 和 `Custom Help Emoji` 作为回退。字体文件名称与配置中的字体家族名称可能不同，以扫描结果为准。内置目录提供完整中文字体和精简图标字体；系统字体也可能参与扫描，但 Docker 中的宿主机字体不会自动出现在容器里。
+
+为满足插件市场 16 MiB 安装包限制，内置 Emoji 字体仅保留模板图标和部分常用符号，不覆盖所有自定义 Emoji。需要完整 Emoji 支持时，可从 [Noto Emoji](https://github.com/googlefonts/noto-emoji) 获取完整字体，放入自定义字体目录，重载后在 `font_order` 中选择 `Noto Color Emoji` 并放在 `Custom Help Emoji` 前面，然后重新 build。字体子集可用 `.github/scripts/subset_emoji_font.py` 从完整字体重建；字体许可见 `resources/fonts/OFL-NotoEmoji.txt`。
 
 Docker/NAS 用户应确保数据目录和自定义字体目录已挂载到容器，并填写容器内可访问的路径。
 

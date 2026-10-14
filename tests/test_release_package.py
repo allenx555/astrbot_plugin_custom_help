@@ -70,6 +70,13 @@ def test_release_title_is_only_the_version_tag(tmp_path, tag):
     assert result["title"] == tag
 
 
+def test_oversized_installation_zip_is_rejected(tmp_path, monkeypatch):
+    source = source_repo(tmp_path)
+    monkeypatch.setattr(release, "PACKAGE_SIZE_LIMIT", 1)
+    with pytest.raises(ValueError, match="16 MiB"):
+        release.package(source, "v0.2.1", tmp_path / "dist", tmp_path / "notes")
+
+
 @pytest.mark.parametrize("tag", ["v0.2.2", "../../v0.2.1", "not-a-version"])
 def test_invalid_or_mismatched_tag_cannot_publish(tmp_path, tag):
     source = source_repo(tmp_path)

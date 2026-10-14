@@ -51,6 +51,6 @@ def test_failed_font_scan_preserves_previous_discovery(monkeypatch):
     assert fonts.get_render_font_list(preferences) == [
         "CustomFont",
         "Sarasa Gothic SC",
-        "Noto Color Emoji",
+        "Custom Help Emoji",
     ]
     assert preferences == ["TemporarilyMissing", "CustomFont", "CustomFont"]

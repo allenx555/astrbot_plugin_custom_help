@@ -52,4 +52,4 @@ class FontManager:
 
     def get_render_font_list(self, user_config_order: list[str]) -> list[str]:
         fonts = [font for font in user_config_order if font in self.available_families]
-        return list(dict.fromkeys([*fonts, "Sarasa Gothic SC", "Noto Color Emoji"]))
+        return list(dict.fromkeys([*fonts, "Sarasa Gothic SC", "Custom Help Emoji"]))

@@ -24,6 +24,7 @@ RUNTIME_FILES = {
 }
 REQUIRED_FILES = {"main.py", "metadata.yaml", "templates/base.typ", "core/menu.py"}
 VERSION_PATTERN = re.compile(r"v\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?")
+PACKAGE_SIZE_LIMIT = 16 * 1024 * 1024
 
 
 def package(source: Path, tag: str, output: Path, notes_dir: Path):
@@ -70,6 +71,8 @@ def package(source: Path, tag: str, output: Path, notes_dir: Path):
     with ZipFile(asset) as archive:
         if archive.testzip() is not None:
             raise ValueError("Installation ZIP validation failed")
+    if asset.stat().st_size > PACKAGE_SIZE_LIMIT:
+        raise ValueError("Installation ZIP exceeds the 16 MiB marketplace limit")
     notes = notes_dir / f"{tag}.md"
     return {
         "title": tag,
